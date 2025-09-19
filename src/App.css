@@ -1,0 +1,182 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Base styles */
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply transition-colors duration-300;
+  }
+  
+  /* Dark mode styles */
+  .dark {
+    color-scheme: dark;
+  }
+}
+
+/* Component styles */
+@layer components {
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100 dark:bg-black;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-400 dark:bg-gray-500 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500 dark:bg-gray-400;
+  }
+
+  /* Star rating styles */
+  .star-rating {
+    @apply flex gap-1;
+  }
+  
+  .star-rating i {
+    @apply text-gray-300 dark:text-gray-500 transition-colors duration-200;
+  }
+  
+  .star-rating i.filled {
+    @apply text-yellow-400;
+  }
+  
+  .star-rating.interactive i:hover {
+    @apply text-yellow-400 transform scale-110 transition-transform duration-200;
+  }
+
+  /* Movie card hover effects */
+  .movie-card {
+    @apply transform transition-all duration-300 hover:scale-105 hover:shadow-xl;
+  }
+  
+  .movie-card img {
+    @apply transition-transform duration-300;
+  }
+  
+  .movie-card:hover img {
+    @apply scale-110;
+  }
+
+  /* Modal styles */
+  .modal-backdrop {
+    @apply fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4;
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  .modal-content {
+    @apply bg-white dark:bg-black rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto;
+    animation: slideIn 0.3s ease-out;
+  }
+
+  /* Button styles */
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+
+  /* Loading animation */
+  .loading-spinner {
+    @apply animate-spin rounded-full border-4 border-gray-300 border-t-blue-600 w-8 h-8;
+  }
+
+  /* Gradient backgrounds */
+  .hero-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+  
+  .card-gradient {
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  }
+  
+  .dark .card-gradient {
+    background: linear-gradient(145deg, #000000 0%, #1a1a1a 100%);
+  }
+
+  /* Text gradients */
+  .text-gradient {
+    @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+  }
+
+  /* Focus styles */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-black;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { 
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive utilities */
+@layer utilities {
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .backdrop-blur {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+}
+
+/* Custom scrollbar for modal */
+.modal-content::-webkit-scrollbar {
+  @apply w-2;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  @apply bg-gray-400 dark:bg-gray-500 rounded-full;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
