@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { movieService, transformTMDBMovie, fallbackMovies } from '../services/tmdbService';
+import { movieService, transformIMDbMovie, transformOMDbMovie, fallbackMovies } from '../services/movieService';
 
 // Initial state
 const initialState = {
@@ -99,21 +99,32 @@ export const MovieProvider = ({ children }) => {
       try {
         if (!append) actions.setLoading(true);
         
+        console.log('Attempting to fetch popular movies from API...');
         const response = await movieService.getPopularMovies(page);
-        const movies = response.results.map(transformTMDBMovie);
+        console.log('API Response:', response);
         
-        dispatch({ 
-          type: actionTypes.SET_MOVIES, 
-          payload: { movies, append } 
-        });
-        dispatch({ type: actionTypes.SET_TOTAL_PAGES, payload: response.total_pages });
-        dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: page });
+        if (response && response.results && response.results.length > 0) {
+          const movies = response.results.map(transformIMDbMovie);
+          console.log('Transformed movies:', movies);
+          
+          dispatch({ 
+            type: actionTypes.SET_MOVIES, 
+            payload: { movies, append } 
+          });
+          dispatch({ type: actionTypes.SET_TOTAL_PAGES, payload: response.total_pages });
+          dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: page });
+        } else {
+          throw new Error('No movie data received from API');
+        }
       } catch (error) {
         console.error('Failed to fetch movies, using fallback data:', error);
+        console.log('Using fallback movies:', fallbackMovies);
         dispatch({ 
           type: actionTypes.SET_MOVIES, 
           payload: { movies: fallbackMovies, append: false } 
         });
+      } finally {
+        actions.setLoading(false);
       }
     },
 
@@ -122,7 +133,7 @@ export const MovieProvider = ({ children }) => {
       try {
         actions.setLoading(true);
         const response = await movieService.getTopRatedMovies();
-        const movies = response.results.map(transformTMDBMovie);
+        const movies = response.results.map(transformIMDbMovie);
         dispatch({ type: actionTypes.SET_TOP_RATED_MOVIES, payload: movies });
       } catch (error) {
         actions.setError('Failed to fetch top rated movies');
@@ -133,7 +144,7 @@ export const MovieProvider = ({ children }) => {
     fetchNowPlayingMovies: async () => {
       try {
         const response = await movieService.getNowPlayingMovies();
-        const movies = response.results.map(transformTMDBMovie);
+        const movies = response.results.map(transformIMDbMovie);
         dispatch({ type: actionTypes.SET_NOW_PLAYING_MOVIES, payload: movies });
       } catch (error) {
         console.error('Failed to fetch now playing movies:', error);
@@ -151,7 +162,7 @@ export const MovieProvider = ({ children }) => {
         if (!append) actions.setLoading(true);
         
         const response = await movieService.searchMovies(query, page);
-        const movies = response.results.map(transformTMDBMovie);
+        const movies = response.results.map(transformIMDbMovie);
         
         dispatch({ 
           type: actionTypes.SET_SEARCH_RESULTS, 
@@ -170,7 +181,7 @@ export const MovieProvider = ({ children }) => {
       try {
         actions.setLoading(true);
         const movie = await movieService.getMovieDetails(movieId);
-        const transformedMovie = transformTMDBMovie(movie);
+        const transformedMovie = transformIMDbMovie(movie);
         dispatch({ type: actionTypes.SET_SELECTED_MOVIE, payload: transformedMovie });
       } catch (error) {
         actions.setError('Failed to fetch movie details');
@@ -193,7 +204,7 @@ export const MovieProvider = ({ children }) => {
         if (!append) actions.setLoading(true);
         
         const response = await movieService.discoverMovies(filters, page);
-        const movies = response.results.map(transformTMDBMovie);
+        const movies = response.results.map(transformIMDbMovie);
         
         dispatch({ 
           type: actionTypes.SET_MOVIES, 

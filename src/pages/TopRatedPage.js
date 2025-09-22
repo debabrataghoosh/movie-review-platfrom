@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import MoviesGrid from '../components/MoviesGrid';
 import { useMovieContext } from '../context/MovieContext';
 
-const TopRatedPage = () => {
+const TopRatedPage = ({ onMovieClick, getUserRating }) => {
   const { state, actions } = useMovieContext();
   const { topRatedMovies, loading } = state;
 
@@ -26,6 +26,8 @@ const TopRatedPage = () => {
         
         <MoviesGrid 
           movies={topRatedMovies}
+          onMovieClick={onMovieClick}
+          getUserRating={getUserRating}
           loading={loading}
           title="Top Rated Movies"
         />

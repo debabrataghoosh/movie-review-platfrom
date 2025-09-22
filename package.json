@@ -1,7 +1,7 @@
 {
-  "name": "movie-review-platform",
+  "name": "cinerank-platform",
   "version": "1.0.0",
-  "description": "A React-based movie review and rating platform",
+  "description": "A React-based movie review and rating platform - CineRank",
   "main": "index.js",
   "scripts": {
     "start": "react-scripts start",
@@ -42,6 +42,6 @@
     "rating",
     "platform"
   ],
-  "author": "MovieHub Team",
+  "author": "CineRank Team",
   "license": "MIT"
 }

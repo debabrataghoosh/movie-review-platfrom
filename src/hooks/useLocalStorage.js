@@ -43,7 +43,7 @@ export const useTheme = () => {
 
 // Hook for managing user ratings
 export const useUserRatings = () => {
-  const [userRatings, setUserRatings] = useLocalStorage('moviehub-ratings', {});
+  const [userRatings, setUserRatings] = useLocalStorage('cinerank-ratings', {});
 
   const rateMovie = (movieId, rating) => {
     setUserRatings(prev => ({
@@ -61,7 +61,7 @@ export const useUserRatings = () => {
 
 // Hook for managing user reviews
 export const useUserReviews = () => {
-  const [userReviews, setUserReviews] = useLocalStorage('moviehub-reviews', {});
+  const [userReviews, setUserReviews] = useLocalStorage('cinerank-reviews', {});
 
   const addReview = (movieId, reviewText, rating) => {
     const review = {

@@ -1,4 +1,4 @@
-import React from 'reac                       className="px-4 py-2 border border-gray-600 round                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2">d-lg bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200">    className="text-sm font-semibold text-gray-300 mb-2">                      className="px-4 py-2 border border-gray-600 rounded-lg bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200">    className="text-sm font-semibold text-gray-300 mb-2">                      className="px-4 py-2 border border-gray-600 rounded-lg bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200">    className="text-sm font-semibold text-gray-300 mb-2">';
+import React from 'react';
 import { useMovieContext } from '../context/MovieContext';
 
 const SearchFilters = () => {
@@ -30,7 +30,7 @@ const SearchFilters = () => {
               id="genreFilter"
               value={filters.genre || ''}
               onChange={(e) => handleFilterChange('genre', e.target.value)}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+              className="px-4 py-2 border border-gray-600 rounded-lg bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
             >
               <option value="">All Genres</option>
               {genres.map(genre => (
@@ -45,7 +45,7 @@ const SearchFilters = () => {
           <div className="flex flex-col">
             <label 
               htmlFor="yearFilter" 
-              className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+              className="text-sm font-semibold text-gray-300 mb-2"
             >
               <i className="fas fa-calendar mr-2 text-green-600"></i>
               Year
@@ -54,7 +54,7 @@ const SearchFilters = () => {
               id="yearFilter"
               value={filters.year || ''}
               onChange={(e) => handleFilterChange('year', e.target.value)}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+              className="px-4 py-2 border border-gray-600 rounded-lg bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
             >
               <option value="">All Years</option>
               {years.map(year => (
@@ -69,7 +69,7 @@ const SearchFilters = () => {
           <div className="flex flex-col">
             <label 
               htmlFor="ratingFilter" 
-              className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+              className="text-sm font-semibold text-gray-300 mb-2"
             >
               <i className="fas fa-star mr-2 text-yellow-500"></i>
               Min Rating
@@ -78,7 +78,7 @@ const SearchFilters = () => {
               id="ratingFilter"
               value={filters.rating || ''}
               onChange={(e) => handleFilterChange('rating', e.target.value)}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+              className="px-4 py-2 border border-gray-600 rounded-lg bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
             >
               <option value="">Any Rating</option>
               <option value="4">4+ Stars</option>
@@ -93,7 +93,7 @@ const SearchFilters = () => {
             <div className="flex flex-col justify-end">
               <button
                 onClick={() => actions.setFilters({ genre: '', year: '', rating: '' })}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
               >
                 <i className="fas fa-times"></i>
                 Clear Filters

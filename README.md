@@ -1,4 +1,4 @@
-# MovieHub - Modern Movie Review & Rating Platform
+# CineRank - Modern Movie Review & Rating Platform
 
 A modern, full-featured React-based movie review and rating platform that integrates with The Movie Database (TMDB) API to provide real movie data and comprehensive user interaction features.
 
@@ -148,7 +148,7 @@ src/
 ### Environment Variables
 ```bash
 REACT_APP_TMDB_API_KEY=your_tmdb_api_key
-REACT_APP_NAME=MovieHub
+REACT_APP_NAME=CineRank
 REACT_APP_VERSION=2.0.0
 ```
 

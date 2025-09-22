@@ -1,14 +1,18 @@
-// Sample movie data for the Movie Review Platform
+// Sample movie data for the Movie Review Platform (IMDb format)
 export const moviesData = [
     {
-        id: 1,
+        id: "tt0111161",
         title: "The Shawshank Redemption",
         year: 1994,
-        genre: "drama",
+        genre: "Drama",
         poster: "https://via.placeholder.com/300x450/2c3e50/white?text=Shawshank+Redemption",
+        backdrop: "https://via.placeholder.com/1280x720/34495e/white?text=Shawshank+Redemption",
         plot: "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency. A timeless tale of hope, friendship, and the power of the human spirit to overcome adversity.",
         rating: 4.9,
         ratingCount: 2847,
+        releaseDate: "1994-09-23",
+        originalLanguage: "en",
+        popularity: 85.2,
         reviews: [
             {
                 id: 1,
@@ -25,14 +29,18 @@ export const moviesData = [
         ]
     },
     {
-        id: 2,
+        id: "tt0468569",
         title: "The Dark Knight",
         year: 2008,
-        genre: "action",
+        genre: "Action",
         poster: "https://via.placeholder.com/300x450/1a1a1a/white?text=Dark+Knight",
+        backdrop: "https://via.placeholder.com/1280x720/1a1a1a/white?text=Dark+Knight",
         plot: "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.",
         rating: 4.8,
         ratingCount: 3421,
+        releaseDate: "2008-07-18",
+        originalLanguage: "en",
+        popularity: 92.1,
         reviews: [
             {
                 id: 3,
@@ -43,14 +51,18 @@ export const moviesData = [
         ]
     },
     {
-        id: 3,
+        id: "tt0110912",
         title: "Pulp Fiction",
         year: 1994,
-        genre: "thriller",
+        genre: "Thriller",
         poster: "https://via.placeholder.com/300x450/8B4513/white?text=Pulp+Fiction",
+        backdrop: "https://via.placeholder.com/1280x720/8B4513/white?text=Pulp+Fiction",
         plot: "The lives of two mob hitmen, a boxer, a gangster and his wife intertwine in four tales of violence and redemption. Tarantino's masterpiece of non-linear storytelling and memorable dialogue.",
         rating: 4.7,
         ratingCount: 2156,
+        releaseDate: "1994-10-14",
+        originalLanguage: "en",
+        popularity: 78.9,
         reviews: [
             {
                 id: 4,
@@ -61,14 +73,18 @@ export const moviesData = [
         ]
     },
     {
-        id: 4,
+        id: "tt0109830",
         title: "Forrest Gump",
         year: 1994,
-        genre: "drama",
+        genre: "Drama",
         poster: "https://via.placeholder.com/300x450/228B22/white?text=Forrest+Gump",
+        backdrop: "https://via.placeholder.com/1280x720/228B22/white?text=Forrest+Gump",
         plot: "The presidencies of Kennedy and Johnson, the events of Vietnam, Watergate and other historical events unfold from the perspective of an Alabama man with an IQ of 75, whose only desire is to be reunited with his childhood sweetheart.",
         rating: 4.6,
         ratingCount: 2934,
+        releaseDate: "1994-07-06",
+        originalLanguage: "en",
+        popularity: 88.3,
         reviews: [
             {
                 id: 5,

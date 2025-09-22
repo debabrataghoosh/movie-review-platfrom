@@ -3,7 +3,7 @@ import SearchFilters from '../components/SearchFilters';
 import MoviesGrid from '../components/MoviesGrid';
 import { useMovieContext } from '../context/MovieContext';
 
-const MoviesPage = () => {
+const MoviesPage = ({ onMovieClick, getUserRating }) => {
   const { state, actions } = useMovieContext();
   const { movies, loading, filters } = state;
 
@@ -40,6 +40,8 @@ const MoviesPage = () => {
         <SearchFilters />
         <MoviesGrid 
           movies={movies}
+          onMovieClick={onMovieClick}
+          getUserRating={getUserRating}
           loading={loading}
           title="Movies"
           showLoadMore={true}

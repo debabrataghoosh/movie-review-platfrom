@@ -4,6 +4,10 @@ import StarRating from './StarRating';
 const MovieCard = ({ movie, userRating, onClick }) => {
   const { title, year, genre, poster, rating, ratingCount } = movie;
 
+  const handleImageError = (e) => {
+    e.target.src = 'https://via.placeholder.com/300x450/374151/white?text=' + encodeURIComponent(title);
+  };
+
   return (
     <div 
       className="bg-gray-900 border border-gray-700 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:border-blue-500/50" 
@@ -17,6 +21,7 @@ const MovieCard = ({ movie, userRating, onClick }) => {
           alt={`${title} poster`} 
           className="w-full h-64 object-cover transition-transform duration-300 hover:scale-110"
           loading="lazy"
+          onError={handleImageError}
         />
       </div>
       <div className="p-4">

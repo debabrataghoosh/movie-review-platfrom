@@ -13,7 +13,7 @@ const Header = () => {
           <Link to="/" className="flex items-center space-x-2">
             <i className="fas fa-film text-2xl text-blue-600"></i>
             <span className="text-xl font-bold text-white">
-              MovieHub
+              CineRank
             </span>
           </Link>
           

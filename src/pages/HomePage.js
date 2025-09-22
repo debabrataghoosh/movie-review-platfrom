@@ -4,7 +4,7 @@ import SearchFilters from '../components/SearchFilters';
 import MoviesGrid from '../components/MoviesGrid';
 import { useMovieContext } from '../context/MovieContext';
 
-const HomePage = () => {
+const HomePage = ({ onMovieClick, getUserRating }) => {
   const { state } = useMovieContext();
   const { movies, searchResults, searchQuery } = state;
 
@@ -16,6 +16,8 @@ const HomePage = () => {
       <SearchFilters />
       <MoviesGrid 
         movies={displayMovies}
+        onMovieClick={onMovieClick}
+        getUserRating={getUserRating}
         title={searchQuery ? `Search Results for "${searchQuery}"` : "Popular Movies"}
       />
     </div>
