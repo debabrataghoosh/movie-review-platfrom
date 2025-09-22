@@ -5,8 +5,15 @@ const MovieCard = ({ movie, userRating, onClick }) => {
   const { title, year, genre, poster, rating, ratingCount } = movie;
 
   const handleImageError = (e) => {
-    e.target.src = 'https://via.placeholder.com/300x450/374151/white?text=' + encodeURIComponent(title);
+    console.log('Image failed to load for movie:', title, 'Original src:', e.target.src);
+    // Use a working placeholder service
+    e.target.src = `https://placehold.co/300x450/374151/white?text=${encodeURIComponent(title.slice(0, 20))}`;
   };
+
+  // Provide a fallback poster if none exists
+  const posterUrl = poster && poster !== '/placeholder-movie.jpg' 
+    ? poster 
+    : `https://placehold.co/300x450/374151/white?text=${encodeURIComponent(title.slice(0, 20))}`;
 
   return (
     <div 
@@ -17,7 +24,7 @@ const MovieCard = ({ movie, userRating, onClick }) => {
     >
       <div className="relative overflow-hidden">
         <img 
-          src={poster} 
+          src={posterUrl} 
           alt={`${title} poster`} 
           className="w-full h-64 object-cover transition-transform duration-300 hover:scale-110"
           loading="lazy"
