@@ -1,5 +1,5 @@
 import React from 'react';
-import StarRating from './StarRating';
+// Removed multi-star rating display for cards; we'll show a single star icon with numeric rating.
 
 const MovieCard = ({ movie, userRating, onClick }) => {
   const { title, year, genre, poster, rating, ratingCount } = movie;
@@ -38,16 +38,10 @@ const MovieCard = ({ movie, userRating, onClick }) => {
           {genre.charAt(0).toUpperCase() + genre.slice(1)}
         </span>
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <StarRating rating={rating} />
-            <span className="text-yellow-400 font-medium">{rating.toFixed(1)}</span>
+          <div className="flex items-center gap-2 text-yellow-400">
+            <i className="fas fa-star"></i>
+            <span className="font-medium text-white">{(rating * 2).toFixed(1)}</span>
           </div>
-          {userRating > 0 && (
-            <div className="text-sm">
-              <small className="text-gray-400 block">Your rating:</small>
-              <StarRating rating={userRating} size="small" />
-            </div>
-          )}
         </div>
       </div>
     </div>

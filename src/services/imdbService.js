@@ -235,8 +235,17 @@ export const transformIMDbMovie = (imdbMovie) => {
     poster: getImageUrl(imdbMovie.i || imdbMovie.image || imdbMovie.poster),
     backdrop: getBackdropUrl(imdbMovie.i || imdbMovie.image || imdbMovie.backdrop),
     plot: imdbMovie.plot?.plotText?.text || imdbMovie.plotSummary?.text || imdbMovie.overview || 'Plot information not available',
-    rating: imdbMovie.ratingsSummary ? (imdbMovie.ratingsSummary.aggregateRating / 2) : 4.0,
-    ratingCount: imdbMovie.ratingsSummary ? imdbMovie.ratingsSummary.voteCount : Math.floor(Math.random() * 1000) + 100,
+    // Prefer precomputed/enriched fields if present (e.g., from OMDb), otherwise fallback to IMDb ratingsSummary
+    rating: typeof imdbMovie.rating === 'number'
+      ? imdbMovie.rating
+      : (imdbMovie.ratingsSummary && typeof imdbMovie.ratingsSummary.aggregateRating === 'number')
+        ? (imdbMovie.ratingsSummary.aggregateRating / 2)
+        : 4.0,
+    ratingCount: typeof imdbMovie.ratingCount === 'number'
+      ? imdbMovie.ratingCount
+      : (imdbMovie.ratingsSummary && typeof imdbMovie.ratingsSummary.voteCount === 'number')
+        ? imdbMovie.ratingsSummary.voteCount
+        : Math.floor(Math.random() * 1000) + 100,
     releaseDate: imdbMovie.releaseDate || imdbMovie.release_date || '',
     originalLanguage: imdbMovie.spokenLanguages?.[0]?.id || 'en',
     popularity: imdbMovie.popularity || Math.random() * 100,

@@ -20,7 +20,7 @@ const MoviesGrid = ({ movies, onMovieClick, getUserRating }) => {
     <section className="py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-3xl font-bold text-white mb-8 text-center">Featured Movies</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        <div className="grid grid-cols-5 gap-6">
           {movies.map(movie => (
             <MovieCard
               key={movie.id}

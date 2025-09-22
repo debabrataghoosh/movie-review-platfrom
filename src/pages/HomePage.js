@@ -1,6 +1,5 @@
 import React from 'react';
 import Hero from '../components/Hero';
-import SearchFilters from '../components/SearchFilters';
 import MoviesGrid from '../components/MoviesGrid';
 import { useMovieContext } from '../context/MovieContext';
 
@@ -13,7 +12,7 @@ const HomePage = ({ onMovieClick, getUserRating }) => {
   return (
     <div className="min-h-screen">
       <Hero />
-      <SearchFilters />
+  {/* Filters moved into Header */}
       <MoviesGrid 
         movies={displayMovies}
         onMovieClick={onMovieClick}

@@ -85,7 +85,7 @@ const MovieModal = ({
             <div className="modal-rating">
               <StarRating rating={movie.rating} />
               <span className="rating-count">
-                {movie.rating.toFixed(1)} ({movie.ratingCount} reviews)
+                {(movie.rating * 2).toFixed(1)} / 10 {movie.ratingCount ? `(${movie.ratingCount.toLocaleString()} votes)` : ''}
               </span>
             </div>
           </div>

@@ -1,12 +1,54 @@
 import { movieService as imdbService, transformIMDbMovie } from './imdbService';
 import { omdbService, transformOMDbMovie } from './omdbService';
 
+// Helper: enrich raw IMDb search/list items with OMDb rating data
+const enhanceWithOMDbDetails = async (items, limit = 12) => {
+  try {
+    const slice = Array.isArray(items) ? items.slice(0, limit) : [];
+    const rest = Array.isArray(items) ? items.slice(limit) : [];
+
+    const results = await Promise.allSettled(
+      slice.map(async (it) => {
+        try {
+          const imdbId = it.id || it.imdbID || '';
+          if (typeof imdbId === 'string' && imdbId.startsWith('tt')) {
+            const omdb = await omdbService.getMovieByImdbId(imdbId);
+            if (omdb && omdb.Response === 'True') {
+              const rating10 = parseFloat(omdb.imdbRating);
+              const rating = isNaN(rating10) ? undefined : rating10 / 2; // convert 10->5
+              const ratingCount = omdb.imdbVotes ? parseInt(omdb.imdbVotes.replace(/,/g, ''), 10) : undefined;
+              return {
+                ...it,
+                // attach enriched fields; transformIMDbMovie will prefer these
+                rating: typeof rating === 'number' ? rating : it.rating,
+                ratingCount: typeof ratingCount === 'number' ? ratingCount : it.ratingCount,
+                // Prefer higher quality poster if available
+                poster: (omdb.Poster && omdb.Poster !== 'N/A') ? omdb.Poster : it.poster,
+              };
+            }
+          }
+        } catch (e) {
+          // ignore per-item failure
+        }
+        return it;
+      })
+    );
+
+    const enriched = results.map(r => r.status === 'fulfilled' ? r.value : items[0]).filter(Boolean);
+    return [...enriched, ...rest];
+  } catch (e) {
+    return items;
+  }
+};
+
 // Combined movie service that uses both IMDb and OMDb APIs
 export const combinedMovieService = {
   // Get popular movies (using IMDb)
   getPopularMovies: async (page = 1) => {
     try {
-      return await imdbService.getPopularMovies(page);
+      const base = await imdbService.getPopularMovies(page);
+      const enhanced = await enhanceWithOMDbDetails(base.results);
+      return { ...base, results: enhanced };
     } catch (error) {
       console.error('Error fetching popular movies:', error);
       throw error;
@@ -16,7 +58,9 @@ export const combinedMovieService = {
   // Get top rated movies (using IMDb)
   getTopRatedMovies: async (page = 1) => {
     try {
-      return await imdbService.getTopRatedMovies(page);
+      const base = await imdbService.getTopRatedMovies(page);
+      const enhanced = await enhanceWithOMDbDetails(base.results);
+      return { ...base, results: enhanced };
     } catch (error) {
       console.error('Error fetching top rated movies:', error);
       throw error;
@@ -26,7 +70,9 @@ export const combinedMovieService = {
   // Get now playing movies (using IMDb)
   getNowPlayingMovies: async (page = 1) => {
     try {
-      return await imdbService.getNowPlayingMovies(page);
+      const base = await imdbService.getNowPlayingMovies(page);
+      const enhanced = await enhanceWithOMDbDetails(base.results);
+      return { ...base, results: enhanced };
     } catch (error) {
       console.error('Error fetching now playing movies:', error);
       throw error;
@@ -38,6 +84,11 @@ export const combinedMovieService = {
     try {
       // First try IMDb search
       const imdbResults = await imdbService.searchMovies(query, page);
+      // Enrich IMDb results with real IMDb ratings via OMDb details
+      const enrichedImdb = {
+        ...imdbResults,
+        results: await enhanceWithOMDbDetails(imdbResults.results)
+      };
       
       // Also try OMDb search for additional results
       try {
@@ -56,8 +107,8 @@ export const combinedMovieService = {
             .filter(movie => movie !== null);
 
           // Combine results (avoiding duplicates by IMDb ID)
-          const combinedResults = [...imdbResults.results];
-          const existingIds = new Set(imdbResults.results.map(movie => movie.id));
+          const combinedResults = [...enrichedImdb.results];
+          const existingIds = new Set(enrichedImdb.results.map(movie => movie.id));
           
           transformedOMDbResults.forEach(omdbMovie => {
             if (!existingIds.has(omdbMovie.id)) {
@@ -68,15 +119,15 @@ export const combinedMovieService = {
           return {
             results: combinedResults,
             page: page,
-            total_pages: Math.max(imdbResults.total_pages || 1, Math.ceil(parseInt(omdbResults.totalResults || '0') / 10)),
-            total_results: (imdbResults.total_results || 0) + parseInt(omdbResults.totalResults || '0')
+            total_pages: Math.max(enrichedImdb.total_pages || 1, Math.ceil(parseInt(omdbResults.totalResults || '0') / 10)),
+            total_results: (enrichedImdb.total_results || 0) + parseInt(omdbResults.totalResults || '0')
           };
         }
       } catch (omdbError) {
         console.warn('OMDb search failed, using only IMDb results:', omdbError);
       }
       
-      return imdbResults;
+      return enrichedImdb;
     } catch (error) {
       console.error('Error searching movies:', error);
       throw error;
