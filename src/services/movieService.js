@@ -1,245 +1,168 @@
-import { movieService as imdbService, transformIMDbMovie } from './imdbService';
-import { omdbService, transformOMDbMovie } from './omdbService';
+import { buildTmdbImageUrl, tmdbClient } from './tmdbService';
 
-// Helper: enrich raw IMDb search/list items with OMDb rating data
-const enhanceWithOMDbDetails = async (items, limit = 12) => {
-  try {
-    const slice = Array.isArray(items) ? items.slice(0, limit) : [];
-    const rest = Array.isArray(items) ? items.slice(limit) : [];
-
-    const results = await Promise.allSettled(
-      slice.map(async (it) => {
-        try {
-          const imdbId = it.id || it.imdbID || '';
-          if (typeof imdbId === 'string' && imdbId.startsWith('tt')) {
-            const omdb = await omdbService.getMovieByImdbId(imdbId);
-            if (omdb && omdb.Response === 'True') {
-              const rating10 = parseFloat(omdb.imdbRating);
-              const rating = isNaN(rating10) ? undefined : rating10 / 2; // convert 10->5
-              const ratingCount = omdb.imdbVotes ? parseInt(omdb.imdbVotes.replace(/,/g, ''), 10) : undefined;
-              return {
-                ...it,
-                // attach enriched fields; transformIMDbMovie will prefer these
-                rating: typeof rating === 'number' ? rating : it.rating,
-                ratingCount: typeof ratingCount === 'number' ? ratingCount : it.ratingCount,
-                // Prefer higher quality poster if available
-                poster: (omdb.Poster && omdb.Poster !== 'N/A') ? omdb.Poster : it.poster,
-              };
-            }
-          }
-        } catch (e) {
-          // ignore per-item failure
-        }
-        return it;
-      })
-    );
-
-    const enriched = results.map(r => r.status === 'fulfilled' ? r.value : items[0]).filter(Boolean);
-    return [...enriched, ...rest];
-  } catch (e) {
-    return items;
-  }
+// Transform TMDB item to the app's normalized movie shape
+export const transformIMDbMovie = (item) => {
+  if (!item) return null;
+  const mediaType = item.media_type || (item.name ? 'tv' : 'movie');
+  const title = item.title || item.name || 'Unknown Title';
+  const date = item.release_date || item.first_air_date || '';
+  const year = date ? parseInt(String(date).slice(0, 4), 10) : undefined;
+  const poster = buildTmdbImageUrl(item.poster_path, 'w780') || 'https://via.placeholder.com/300x450/374151/ffffff?text=No+Image';
+  const backdrop = buildTmdbImageUrl(item.backdrop_path, 'original') || '';
+  const rating10 = typeof item.vote_average === 'number' ? item.vote_average : undefined;
+  const rating = typeof rating10 === 'number' ? rating10 / 2 : 4.0;
+  const ratingCount = typeof item.vote_count === 'number' ? item.vote_count : Math.floor(Math.random() * 1000) + 100;
+  return {
+    id: String(item.id ?? `tmdb_${Date.now()}`),
+  imdbId: item.imdb_id || item?.external_ids?.imdb_id || '',
+    title,
+    year: year || 2024,
+    genre: mediaType === 'tv' ? 'TV' : 'Movie',
+    poster,
+    backdrop,
+    plot: item.overview || 'Plot information not available',
+    rating,
+    ratingCount,
+    releaseDate: date,
+    originalLanguage: item.original_language || 'en',
+    popularity: item.popularity || 0,
+    reviews: []
+  };
 };
 
-// Combined movie service that uses both IMDb and OMDb APIs
+// TMDB-only service implementing the same interface
 export const combinedMovieService = {
-  // Get popular movies (using IMDb)
   getPopularMovies: async (page = 1) => {
-    try {
-      const base = await imdbService.getPopularMovies(page);
-      const enhanced = await enhanceWithOMDbDetails(base.results);
-      return { ...base, results: enhanced };
-    } catch (error) {
-      console.error('Error fetching popular movies:', error);
-      throw error;
-    }
+    const resp = (await tmdbClient.get('/movie/popular', { params: { page } })).data;
+    return { results: resp.results || [], page: resp.page, total_pages: resp.total_pages, total_results: resp.total_results };
   },
 
-  // Get top rated movies (using IMDb)
   getTopRatedMovies: async (page = 1) => {
-    try {
-      const base = await imdbService.getTopRatedMovies(page);
-      const enhanced = await enhanceWithOMDbDetails(base.results);
-      return { ...base, results: enhanced };
-    } catch (error) {
-      console.error('Error fetching top rated movies:', error);
-      throw error;
-    }
+    const resp = (await tmdbClient.get('/movie/top_rated', { params: { page } })).data;
+    return { results: resp.results || [], page: resp.page, total_pages: resp.total_pages, total_results: resp.total_results };
   },
 
-  // Get now playing movies (using IMDb)
+  // Popular TV shows
+  getPopularTvShows: async (page = 1) => {
+    const resp = (await tmdbClient.get('/tv/popular', { params: { page } })).data;
+    // Normalize results to include media_type for transformer
+    const results = (resp.results || []).map(r => ({ ...r, media_type: r.media_type || 'tv' }));
+    return { results, page: resp.page, total_pages: resp.total_pages, total_results: resp.total_results };
+  },
+
+  getTopRatedTvShows: async (page = 1) => {
+    const resp = (await tmdbClient.get('/tv/top_rated', { params: { page } })).data;
+    const results = (resp.results || []).map(r => ({ ...r, media_type: 'tv' }));
+    return { results, page: resp.page, total_pages: resp.total_pages, total_results: resp.total_results };
+  },
+
+  getTrendingTvWeek: async (page = 1) => {
+    const resp = (await tmdbClient.get('/trending/tv/week', { params: { page } })).data;
+    const results = (resp.results || []).map(r => ({ ...r, media_type: 'tv' }));
+    return { results, page: resp.page, total_pages: resp.total_pages, total_results: resp.total_results };
+  },
+
+  getAiringToday: async (page = 1) => {
+    const resp = (await tmdbClient.get('/tv/airing_today', { params: { page } })).data;
+    const results = (resp.results || []).map(r => ({ ...r, media_type: 'tv' }));
+    return { results, page: resp.page, total_pages: resp.total_pages, total_results: resp.total_results };
+  },
+
+  getOnTheAir: async (page = 1) => {
+    const resp = (await tmdbClient.get('/tv/on_the_air', { params: { page } })).data;
+    const results = (resp.results || []).map(r => ({ ...r, media_type: 'tv' }));
+    return { results, page: resp.page, total_pages: resp.total_pages, total_results: resp.total_results };
+  },
+
   getNowPlayingMovies: async (page = 1) => {
-    try {
-      const base = await imdbService.getNowPlayingMovies(page);
-      const enhanced = await enhanceWithOMDbDetails(base.results);
-      return { ...base, results: enhanced };
-    } catch (error) {
-      console.error('Error fetching now playing movies:', error);
-      throw error;
-    }
+    const resp = (await tmdbClient.get('/movie/now_playing', { params: { page } })).data;
+    return { results: resp.results || [], page: resp.page, total_pages: resp.total_pages, total_results: resp.total_results };
   },
 
-  // Search movies (try both APIs for better results)
   searchMovies: async (query, page = 1) => {
+    // Use TMDB multi-search so TV shows appear too
+    const r = await tmdbClient.get('/search/multi', {
+      params: { query, page, include_adult: false }
+    });
+    const results = (r.data.results || []).filter(it => it.media_type === 'movie' || it.media_type === 'tv');
+    return { results, page: r.data.page, total_pages: r.data.total_pages, total_results: r.data.total_results };
+  },
+
+  getMovieDetails: async (tmdbId) => {
+    // Try movie then TV, include external_ids so we can map IMDb
     try {
-      // First try IMDb search
-      const imdbResults = await imdbService.searchMovies(query, page);
-      // Enrich IMDb results with real IMDb ratings via OMDb details
-      const enrichedImdb = {
-        ...imdbResults,
-        results: await enhanceWithOMDbDetails(imdbResults.results)
-      };
-      
-      // Also try OMDb search for additional results
+      const r = await tmdbClient.get(`/movie/${tmdbId}`, { params: { append_to_response: 'videos,images,credits,external_ids' } });
+      return r.data;
+    } catch {}
+    const r2 = await tmdbClient.get(`/tv/${tmdbId}`, { params: { append_to_response: 'videos,images,credits,external_ids' } });
+    return r2.data;
+  },
+
+  getRecommendations: async (tmdbId, mediaType = 'movie') => {
+    // Try appropriate endpoint; fallback to opposite
+    try {
+      const r = await tmdbClient.get(`/${mediaType}/${tmdbId}/recommendations`);
+      return r.data?.results || [];
+    } catch {
       try {
-        const omdbResults = await omdbService.searchMovies(query, page);
-        
-        if (omdbResults.Response === 'True' && omdbResults.Search) {
-          // Transform OMDb results and merge with IMDb results
-          const transformedOMDbResults = omdbResults.Search
-            .map(movie => transformOMDbMovie({
-              imdbID: movie.imdbID,
-              Title: movie.Title,
-              Year: movie.Year,
-              Type: movie.Type,
-              Poster: movie.Poster
-            }))
-            .filter(movie => movie !== null);
-
-          // Combine results (avoiding duplicates by IMDb ID)
-          const combinedResults = [...enrichedImdb.results];
-          const existingIds = new Set(enrichedImdb.results.map(movie => movie.id));
-          
-          transformedOMDbResults.forEach(omdbMovie => {
-            if (!existingIds.has(omdbMovie.id)) {
-              combinedResults.push(omdbMovie);
-            }
-          });
-
-          return {
-            results: combinedResults,
-            page: page,
-            total_pages: Math.max(enrichedImdb.total_pages || 1, Math.ceil(parseInt(omdbResults.totalResults || '0') / 10)),
-            total_results: (enrichedImdb.total_results || 0) + parseInt(omdbResults.totalResults || '0')
-          };
-        }
-      } catch (omdbError) {
-        console.warn('OMDb search failed, using only IMDb results:', omdbError);
+        const alt = mediaType === 'movie' ? 'tv' : 'movie';
+        const r2 = await tmdbClient.get(`/${alt}/${tmdbId}/recommendations`);
+        return r2.data?.results || [];
+      } catch {
+        return [];
       }
-      
-      return enrichedImdb;
-    } catch (error) {
-      console.error('Error searching movies:', error);
-      throw error;
     }
   },
 
-  // Get movie details (enhanced with both APIs)
-  getMovieDetails: async (movieId) => {
+  getMovieReviews: async (tmdbId, page = 1) => {
     try {
-      let movieDetails = null;
-      
-      // Try to get details from OMDb first (more detailed info)
-      if (movieId.startsWith('tt')) {
-        try {
-          const omdbMovie = await omdbService.getMovieByImdbId(movieId);
-          if (omdbMovie.Response === 'True') {
-            movieDetails = transformOMDbMovie(omdbMovie);
-          }
-        } catch (omdbError) {
-          console.warn('OMDb details failed, trying IMDb:', omdbError);
-        }
-      }
-      
-      // Fallback to IMDb if OMDb fails or for non-IMDb IDs
-      if (!movieDetails) {
-        const imdbMovie = await imdbService.getMovieDetails(movieId);
-        movieDetails = transformIMDbMovie(imdbMovie);
-      }
-      
-      return movieDetails;
-    } catch (error) {
-      console.error('Error fetching movie details:', error);
-      throw error;
-    }
+      const r = await tmdbClient.get(`/movie/${tmdbId}/reviews`, { params: { page } });
+      return r.data;
+    } catch {}
+    const r2 = await tmdbClient.get(`/tv/${tmdbId}/reviews`, { params: { page } });
+    return r2.data;
   },
 
-  // Get movie reviews (using IMDb)
-  getMovieReviews: async (movieId, page = 1) => {
-    try {
-      return await imdbService.getMovieReviews(movieId, page);
-    } catch (error) {
-      console.error('Error fetching movie reviews:', error);
-      throw error;
-    }
-  },
-
-  // Get genres (using IMDb)
   getGenres: async () => {
-    try {
-      return await imdbService.getGenres();
-    } catch (error) {
-      console.error('Error fetching genres:', error);
-      throw error;
-    }
+    const [gm, gt] = await Promise.all([
+      tmdbClient.get('/genre/movie/list'),
+      tmdbClient.get('/genre/tv/list'),
+    ]);
+    const merge = [...(gm.data.genres || []), ...(gt.data.genres || [])];
+    return merge;
   },
 
-  // Discover movies with filters
   discoverMovies: async (filters = {}, page = 1) => {
-    try {
-      // Use IMDb for discovery
-      const imdbResults = await imdbService.discoverMovies(filters, page);
-      
-      // Enhance results with OMDb data for better details
-      const enhancedResults = await Promise.allSettled(
-        imdbResults.results.map(async (movie) => {
-          if (movie.id && movie.id.startsWith('tt')) {
-            try {
-              const omdbMovie = await omdbService.getMovieByImdbId(movie.id);
-              if (omdbMovie.Response === 'True') {
-                const enhancedMovie = transformOMDbMovie(omdbMovie);
-                return enhancedMovie || movie;
-              }
-            } catch (error) {
-              console.warn(`Failed to enhance movie ${movie.id} with OMDb:`, error);
-            }
-          }
-          return movie;
-        })
-      );
-      
-      const finalResults = enhancedResults
-        .filter(result => result.status === 'fulfilled')
-        .map(result => result.value);
-      
-      return {
-        ...imdbResults,
-        results: finalResults
-      };
-    } catch (error) {
-      console.error('Error discovering movies:', error);
-      throw error;
-    }
+    const params = { page, include_adult: false, ...filters };
+    const r = await tmdbClient.get('/discover/movie', { params });
+    return { results: r.data.results || [], page: r.data.page, total_pages: r.data.total_pages, total_results: r.data.total_results };
   },
 
-  // Enhanced search by title (using OMDb for precise matches)
+  // Discover TV shows (parallels discoverMovies but for /discover/tv)
+  discoverTvShows: async (filters = {}, page = 1) => {
+    const params = { page, include_adult: false, ...filters };
+    const r = await tmdbClient.get('/discover/tv', { params });
+    const results = (r.data.results || []).map(r => ({ ...r, media_type: r.media_type || 'tv' }));
+    return { results, page: r.data.page, total_pages: r.data.total_pages, total_results: r.data.total_results };
+  },
+
   searchByTitle: async (title, year = null) => {
-    try {
-      return await omdbService.getMovieByTitle(title, year);
-    } catch (error) {
-      console.error('Error searching by title:', error);
-      throw error;
-    }
+    const params = { query: title };
+    if (year) params.year = year;
+    const r = await tmdbClient.get('/search/movie', { params });
+    return r.data;
   }
 };
 
-// Export combined service as default movie service
 export const movieService = combinedMovieService;
 
-// Export transform functions
-export { transformIMDbMovie, transformOMDbMovie };
+// Provide transform symbols to callers; now they transform TMDB items
+// Temporary: also export a no-op for OMDb to satisfy imports
+export const transformOMDbMovie = (x) => x;
 
-// Export fallback data
-export { fallbackMovies } from './imdbService';
+// Fallback data (minimal)
+export const fallbackMovies = [
+  { id: 1, title: 'Fallback Movie', year: 2024, genre: 'Movie', poster: '/placeholder-movie.jpg', backdrop: '/placeholder-backdrop.jpg', plot: 'No plot', rating: 4.0, ratingCount: 100 }
+];
 
 export default combinedMovieService;

@@ -6,7 +6,10 @@ import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import MoviesPage from './pages/MoviesPage';
 import TopRatedPage from './pages/TopRatedPage';
+import TvSeriesPage from './pages/TvSeriesPage';
+import NewReleasesPage from './pages/NewReleasesPage';
 import ReviewsPage from './pages/ReviewsPage';
+import MovieDetailPage from './pages/MovieDetailPage';
 import { MovieProvider } from './context/MovieContext';
 import { useTheme, useUserRatings, useUserReviews } from './hooks/useLocalStorage';
 import './App.css';
@@ -52,8 +55,11 @@ function AppContent() {
           <Routes>
             <Route path="/" element={<HomePage onMovieClick={handleMovieClick} getUserRating={getUserRating} />} />
             <Route path="/movies" element={<MoviesPage onMovieClick={handleMovieClick} getUserRating={getUserRating} />} />
+            <Route path="/tv" element={<TvSeriesPage onMovieClick={handleMovieClick} getUserRating={getUserRating} />} />
+            <Route path="/new" element={<NewReleasesPage onMovieClick={handleMovieClick} getUserRating={getUserRating} />} />
             <Route path="/top-rated" element={<TopRatedPage onMovieClick={handleMovieClick} getUserRating={getUserRating} />} />
             <Route path="/reviews" element={<ReviewsPage />} />
+            <Route path="/title/:id" element={<MovieDetailPage />} />
           </Routes>
         </main>
 

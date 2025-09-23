@@ -1,9 +1,14 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { movieService, transformIMDbMovie, transformOMDbMovie, fallbackMovies } from '../services/movieService';
+import { movieService, transformIMDbMovie, fallbackMovies } from '../services/movieService';
 
 // Initial state
 const initialState = {
   movies: [],
+  tvShows: [],
+  topRatedTv: [],
+  trendingTv: [],
+  airingToday: [],
+  onTheAir: [],
   topRatedMovies: [],
   nowPlayingMovies: [],
   searchResults: [],
@@ -26,6 +31,11 @@ const actionTypes = {
   SET_LOADING: 'SET_LOADING',
   SET_ERROR: 'SET_ERROR',
   SET_MOVIES: 'SET_MOVIES',
+  SET_TV_SHOWS: 'SET_TV_SHOWS',
+  SET_TOP_RATED_TV: 'SET_TOP_RATED_TV',
+  SET_TRENDING_TV: 'SET_TRENDING_TV',
+  SET_AIRING_TODAY: 'SET_AIRING_TODAY',
+  SET_ON_THE_AIR: 'SET_ON_THE_AIR',
   SET_TOP_RATED_MOVIES: 'SET_TOP_RATED_MOVIES',
   SET_NOW_PLAYING_MOVIES: 'SET_NOW_PLAYING_MOVIES',
   SET_SEARCH_RESULTS: 'SET_SEARCH_RESULTS',
@@ -52,6 +62,21 @@ const movieReducer = (state, action) => {
         loading: false,
         error: null
       };
+    case actionTypes.SET_TV_SHOWS:
+      return {
+        ...state,
+        tvShows: action.payload.append ? [...state.tvShows, ...action.payload.movies] : action.payload.movies,
+        loading: false,
+        error: null
+      };
+    case actionTypes.SET_TOP_RATED_TV:
+      return { ...state, topRatedTv: action.payload, loading: false };
+    case actionTypes.SET_TRENDING_TV:
+      return { ...state, trendingTv: action.payload, loading: false };
+    case actionTypes.SET_AIRING_TODAY:
+      return { ...state, airingToday: action.payload, loading: false };
+    case actionTypes.SET_ON_THE_AIR:
+      return { ...state, onTheAir: action.payload, loading: false };
     case actionTypes.SET_TOP_RATED_MOVIES:
       return { ...state, topRatedMovies: action.payload, loading: false };
     case actionTypes.SET_NOW_PLAYING_MOVIES:
@@ -125,6 +150,63 @@ export const MovieProvider = ({ children }) => {
         });
       } finally {
         actions.setLoading(false);
+      }
+    },
+
+    // Fetch popular TV shows
+    fetchPopularTvShows: async (page = 1, append = false) => {
+      try {
+        if (!append) actions.setLoading(true);
+        const response = await movieService.getPopularTvShows(page);
+        const shows = response.results.map(transformIMDbMovie);
+        dispatch({ type: actionTypes.SET_TV_SHOWS, payload: { movies: shows, append } });
+        dispatch({ type: actionTypes.SET_TOTAL_PAGES, payload: response.total_pages });
+        dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: page });
+      } catch (error) {
+        console.error('Failed to fetch TV shows:', error);
+        actions.setError('Failed to fetch TV shows');
+      } finally {
+        actions.setLoading(false);
+      }
+    },
+
+    fetchTopRatedTv: async () => {
+      try {
+        const response = await movieService.getTopRatedTvShows();
+        const shows = response.results.map(transformIMDbMovie);
+        dispatch({ type: actionTypes.SET_TOP_RATED_TV, payload: shows });
+      } catch (e) {
+        console.error('Failed to fetch top rated TV:', e);
+      }
+    },
+
+    fetchTrendingTv: async () => {
+      try {
+        const response = await movieService.getTrendingTvWeek();
+        const shows = response.results.map(transformIMDbMovie);
+        dispatch({ type: actionTypes.SET_TRENDING_TV, payload: shows });
+      } catch (e) {
+        console.error('Failed to fetch trending TV:', e);
+      }
+    },
+
+    fetchAiringToday: async () => {
+      try {
+        const response = await movieService.getAiringToday();
+        const shows = response.results.map(transformIMDbMovie);
+        dispatch({ type: actionTypes.SET_AIRING_TODAY, payload: shows });
+      } catch (e) {
+        console.error('Failed to fetch airing today TV:', e);
+      }
+    },
+
+    fetchOnTheAir: async () => {
+      try {
+        const response = await movieService.getOnTheAir();
+        const shows = response.results.map(transformIMDbMovie);
+        dispatch({ type: actionTypes.SET_ON_THE_AIR, payload: shows });
+      } catch (e) {
+        console.error('Failed to fetch on the air TV:', e);
       }
     },
 
@@ -214,6 +296,20 @@ export const MovieProvider = ({ children }) => {
         dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: page });
       } catch (error) {
         actions.setError('Failed to discover movies');
+      }
+    },
+
+    // Discover TV shows
+    discoverTvShows: async (filters, page = 1, append = false) => {
+      try {
+        if (!append) actions.setLoading(true);
+        const response = await movieService.discoverTvShows(filters, page);
+        const shows = response.results.map(transformIMDbMovie);
+        dispatch({ type: actionTypes.SET_TV_SHOWS, payload: { movies: shows, append } });
+        dispatch({ type: actionTypes.SET_TOTAL_PAGES, payload: response.total_pages });
+        dispatch({ type: actionTypes.SET_CURRENT_PAGE, payload: page });
+      } catch (error) {
+        actions.setError('Failed to discover TV shows');
       }
     },
 

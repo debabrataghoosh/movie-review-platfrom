@@ -1,7 +1,7 @@
 import React from 'react';
 import MovieCard from './MovieCard';
 
-const MoviesGrid = ({ movies, onMovieClick, getUserRating }) => {
+const MoviesGrid = ({ movies, onMovieClick, getUserRating, title = 'Featured Movies' }) => {
   if (movies.length === 0) {
     return (
       <section className="py-12">
@@ -19,7 +19,7 @@ const MoviesGrid = ({ movies, onMovieClick, getUserRating }) => {
   return (
     <section className="py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-3xl font-bold text-white mb-8 text-center">Featured Movies</h2>
+  <h2 className="text-3xl font-bold text-white mb-8 text-center">{title}</h2>
         <div className="grid grid-cols-5 gap-6">
           {movies.map(movie => (
             <MovieCard
