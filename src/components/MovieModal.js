@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { computeReleaseMeta } from '../utils/releaseMeta';
 import StarRating from './StarRating';
 
 const MovieModal = ({ 
@@ -59,6 +60,8 @@ const MovieModal = ({
     });
   };
 
+  const { dateLabel, daysLeft, isFuture, iso, badgeColor } = computeReleaseMeta(movie.releaseDate, movie.year);
+
   return (
     <div className="modal" onClick={handleBackdropClick}>
       <div className="modal-content">
@@ -78,7 +81,15 @@ const MovieModal = ({
           />
           <div className="modal-info">
             <h2>{movie.title}</h2>
-            <p className="modal-year">{movie.year}</p>
+            <div className="modal-year flex items-center gap-2" title={iso || (dateLabel==='TBD' ? 'Release date not yet announced' : '')}>
+              <span>{dateLabel}</span>
+              {isFuture && daysLeft != null && (
+                <span className={`text-[10px] font-semibold px-2 py-1 rounded-full uppercase tracking-wide ${badgeColor}`} title={`${daysLeft} day${daysLeft===1?'':'s'} left`}>{daysLeft}d</span>
+              )}
+              {dateLabel==='TBD' && (
+                <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-gray-600/60 text-white" title="Release date to be determined">TBD</span>
+              )}
+            </div>
             <p className="modal-genre">
               {movie.genre.charAt(0).toUpperCase() + movie.genre.slice(1)}
             </p>

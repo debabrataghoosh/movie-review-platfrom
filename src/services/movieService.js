@@ -14,10 +14,12 @@ export const transformIMDbMovie = (item) => {
   const ratingCount = typeof item.vote_count === 'number' ? item.vote_count : Math.floor(Math.random() * 1000) + 100;
   return {
     id: String(item.id ?? `tmdb_${Date.now()}`),
+    tmdbId: item.id, // preserve original TMDB numeric id separately for routing
   imdbId: item.imdb_id || item?.external_ids?.imdb_id || '',
     title,
     year: year || 2024,
     genre: mediaType === 'tv' ? 'TV' : 'Movie',
+    genreIds: Array.isArray(item.genre_ids) ? item.genre_ids : (Array.isArray(item.genres) ? item.genres.map(g=>g.id) : []),
     poster,
     backdrop,
     plot: item.overview || 'Plot information not available',
@@ -39,6 +41,30 @@ export const combinedMovieService = {
 
   getTopRatedMovies: async (page = 1) => {
     const resp = (await tmdbClient.get('/movie/top_rated', { params: { page } })).data;
+    return { results: resp.results || [], page: resp.page, total_pages: resp.total_pages, total_results: resp.total_results };
+  },
+
+  getTrendingMoviesWeek: async (page = 1) => {
+    const resp = (await tmdbClient.get('/trending/movie/week', { params: { page } })).data;
+    return { results: resp.results || [], page: resp.page, total_pages: resp.total_pages, total_results: resp.total_results };
+  },
+  
+  // Mixed media trending (all) day & week
+  getTrendingAllDay: async (page = 1) => {
+    const resp = (await tmdbClient.get('/trending/all/day', { params: { page } })).data;
+    // ensure each item carries media_type
+    const results = (resp.results || []).map(r => ({ ...r, media_type: r.media_type || (r.name ? 'tv' : 'movie') }));
+    return { results, page: resp.page, total_pages: resp.total_pages, total_results: resp.total_results };
+  },
+
+  getTrendingAllWeek: async (page = 1) => {
+    const resp = (await tmdbClient.get('/trending/all/week', { params: { page } })).data;
+    const results = (resp.results || []).map(r => ({ ...r, media_type: r.media_type || (r.name ? 'tv' : 'movie') }));
+    return { results, page: resp.page, total_pages: resp.total_pages, total_results: resp.total_results };
+  },
+
+  getUpcomingMovies: async (page = 1) => {
+    const resp = (await tmdbClient.get('/movie/upcoming', { params: { page, include_adult: false, region: 'US' } })).data;
     return { results: resp.results || [], page: resp.page, total_pages: resp.total_pages, total_results: resp.total_results };
   },
 
@@ -151,6 +177,20 @@ export const combinedMovieService = {
     if (year) params.year = year;
     const r = await tmdbClient.get('/search/movie', { params });
     return r.data;
+  },
+
+  // People (Celebrities)
+  getPopularPeople: async (page = 1) => {
+    const resp = (await tmdbClient.get('/person/popular', { params: { page } })).data;
+    return { results: resp.results || [], page: resp.page, total_pages: resp.total_pages, total_results: resp.total_results };
+  },
+  getPersonDetails: async (personId) => {
+    const resp = (await tmdbClient.get(`/person/${personId}`, { params: { append_to_response: 'images,external_ids' } })).data;
+    return resp;
+  },
+  getPersonCombinedCredits: async (personId) => {
+    const resp = (await tmdbClient.get(`/person/${personId}/combined_credits`)).data;
+    return resp;
   }
 };
 

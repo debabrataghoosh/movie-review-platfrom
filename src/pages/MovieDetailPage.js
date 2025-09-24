@@ -4,6 +4,7 @@ import { movieService, transformIMDbMovie } from '../services/movieService';
 import { buildTmdbImageUrl } from '../services/tmdbService';
 import { getImdbMeta } from '../services/imdbService';
 import LiquidButton from '../components/LiquidButton';
+import { computeReleaseMeta } from '../utils/releaseMeta';
 
 // Lightweight inline credits section component (could be extracted later)
 const CreditsSection = ({ rawId, rawData, fullCredits }) => {
@@ -309,6 +310,7 @@ const MovieDetailPage = () => {
 
   const poster = data.poster;
   const backdrop = data.backdrop;
+  const { dateLabel, daysLeft, isFuture, iso, badgeColor } = computeReleaseMeta(data.releaseDate, data.year);
 
   return (
   <section className="relative min-h-[75vh] pt-24 pb-24 text-white overflow-hidden">
@@ -335,7 +337,19 @@ const MovieDetailPage = () => {
           <div className="flex-1">
             <h1 className="text-3xl md:text-5xl font-extrabold mb-4 drop-shadow-[0_2px_20px_rgba(0,0,0,0.6)]">{data.title}</h1>
             <div className="flex flex-wrap gap-4 text-sm text-white/80 mb-6 items-center">
-              {data.year && <span className="inline-flex items-center gap-1"><i className="far fa-calendar" />{data.year}</span>}
+              {dateLabel && (
+                <span className="inline-flex items-center gap-2" title={iso || (dateLabel==='TBD' ? 'Release date not yet announced' : '')}>
+                  <span className="inline-flex items-center gap-1"><i className="far fa-calendar" />{dateLabel}</span>
+                  {isFuture && daysLeft != null && (
+                    <span className={`text-[10px] font-semibold px-2 py-1 rounded-full uppercase tracking-wide ${badgeColor}`} title={`${daysLeft} day${daysLeft===1?'':'s'} left`}>
+                      {daysLeft}d
+                    </span>
+                  )}
+                  {dateLabel==='TBD' && (
+                    <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-gray-600/60 text-white" title="Release date to be determined">TBD</span>
+                  )}
+                </span>
+              )}
               <span className="inline-flex items-center gap-1"><i className="fas fa-film" />{data.genre}</span>
               {data.originalLanguage && <span className="uppercase tracking-wide">{data.originalLanguage}</span>}
               {/* TMDB rating (converted to /10) */}

@@ -8,7 +8,9 @@ import MoviesPage from './pages/MoviesPage';
 import TopRatedPage from './pages/TopRatedPage';
 import TvSeriesPage from './pages/TvSeriesPage';
 import NewReleasesPage from './pages/NewReleasesPage';
-import ReviewsPage from './pages/ReviewsPage';
+// ReviewsPage removed per navigation change
+import PeoplePage from './pages/PeoplePage';
+import PersonDetailPage from './pages/PersonDetailPage';
 import MovieDetailPage from './pages/MovieDetailPage';
 import { MovieProvider } from './context/MovieContext';
 import { useTheme, useUserRatings, useUserReviews } from './hooks/useLocalStorage';
@@ -58,7 +60,8 @@ function AppContent() {
             <Route path="/tv" element={<TvSeriesPage onMovieClick={handleMovieClick} getUserRating={getUserRating} />} />
             <Route path="/new" element={<NewReleasesPage onMovieClick={handleMovieClick} getUserRating={getUserRating} />} />
             <Route path="/top-rated" element={<TopRatedPage onMovieClick={handleMovieClick} getUserRating={getUserRating} />} />
-            <Route path="/reviews" element={<ReviewsPage />} />
+            <Route path="/people" element={<PeoplePage />} />
+            <Route path="/person/:id" element={<PersonDetailPage />} />
             <Route path="/title/:id" element={<MovieDetailPage />} />
           </Routes>
         </main>

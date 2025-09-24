@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useMovieContext } from '../context/MovieContext';
+import FilterPopover from './FilterPopover';
 
 const Header = () => {
   const location = useLocation();
@@ -56,86 +57,46 @@ const Header = () => {
       <div className="pointer-events-none absolute inset-x-0 -bottom-px h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center h-20 gap-4">
-          <Link to="/" className="flex items-center space-x-2">
-            <i className="fas fa-film text-2xl text-blue-500 drop-shadow-[0_0_12px_rgba(59,130,246,0.45)]"></i>
-            <span className="text-xl font-bold text-white tracking-wide">CineRank</span>
+          {/* Brand (text only, no logo) */}
+          <Link
+            to="/"
+            aria-label="CineRank Home"
+            className="text-white font-extrabold text-xl md:text-2xl tracking-tight select-none hover:text-white/90"
+          >
+            CineRank
           </Link>
 
           {/* Search + Filters (desktop) */}
           <form onSubmit={handleSearchSubmit} className="flex-1 hidden md:flex items-center justify-center">
-            <div className="relative w-full max-w-2xl">
-              <div className="group flex items-center gap-2 bg-white/5 backdrop-blur-sm rounded-full ring-1 ring-white/10 px-3.5 py-1.5">
+            <div className="relative w-full max-w-3xl">
+              <div className="group flex items-center gap-2 bg-white/10 backdrop-blur-xl rounded-full ring-1 ring-white/15 px-3.5 py-1 h-10 shadow-[0_8px_32px_rgba(0,0,0,0.35)]">
                 <i className="fas fa-search text-white/60"></i>
                 <input
                   type="text"
                   value={searchInput}
                   onChange={handleSearchChange}
                   placeholder="Search movies, actors, directors..."
-                  className="flex-1 bg-transparent text-white placeholder-white/50 focus:outline-none py-0 text-sm md:text-base"
+                  className="flex-1 bg-transparent text-white placeholder-white/60 focus:outline-none text-sm leading-none"
                   aria-label="Search movies"
                 />
-                {/* Filters icon only; hidden until input is focused */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setFiltersOpen((v) => !v)}
-                    className="opacity-0 group-focus-within:opacity-100 transition-opacity duration-200 p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10"
-                    aria-haspopup="true"
-                    aria-expanded={filtersOpen}
-                    aria-label="Open filters"
-                  >
-                    <i className="fas fa-sliders-h"></i>
-                  </button>
-                  {filtersOpen && (
-                    <div className="absolute right-0 mt-3 w-96 bg-black/90 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl p-4 z-50">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="flex flex-col">
-                          <label htmlFor="hdr-genre" className="text-xs text-white/70 mb-1">Genre</label>
-                          <select
-                            id="hdr-genre"
-                            value={filters.genre || ''}
-                            onChange={(e) => applyFilterChange('genre', e.target.value)}
-                            className="px-3 py-2 bg-white/5 text-white rounded-lg ring-1 ring-white/10"
-                          >
-                            <option value="">All Genres</option>
-                            {genres.map((g) => (
-                              <option key={g.id} value={g.name.toLowerCase()}>{g.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="flex flex-col">
-                          <label htmlFor="hdr-year" className="text-xs text-white/70 mb-1">Year</label>
-                          <select
-                            id="hdr-year"
-                            value={filters.year || ''}
-                            onChange={(e) => applyFilterChange('year', e.target.value)}
-                            className="px-3 py-2 bg-white/5 text-white rounded-lg ring-1 ring-white/10"
-                          >
-                            <option value="">All Years</option>
-                            {years.map((y) => (
-                              <option key={y} value={y}>{y}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="flex flex-col">
-                          <label htmlFor="hdr-rating" className="text-xs text-white/70 mb-1">Min Rating</label>
-                          <select
-                            id="hdr-rating"
-                            value={filters.rating || ''}
-                            onChange={(e) => applyFilterChange('rating', e.target.value)}
-                            className="px-3 py-2 bg-white/5 text-white rounded-lg ring-1 ring-white/10"
-                          >
-                            <option value="">Any Rating</option>
-                            <option value="4">4+ Stars</option>
-                            <option value="3">3+ Stars</option>
-                            <option value="2">2+ Stars</option>
-                            <option value="1">1+ Stars</option>
-                          </select>
-                        </div>
-                      </div>
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen(v=>!v)}
+                  className="ml-1 px-3 h-7 rounded-full bg-white/5 hover:bg-white/15 text-xs font-medium text-white/80 flex items-center gap-1 transition"
+                  aria-haspopup="true"
+                  aria-expanded={filtersOpen}
+                  aria-label="Toggle advanced filters"
+                >
+                  <i className="fas fa-sliders-h text-[11px]"></i>
+                  Filters
+                </button>
+                {filtersOpen && (
+                  <div className="absolute left-0 top-full mt-2 origin-top-left z-50">
+                    <div className="relative bg-black/85 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-5 ring-1 ring-white/10 w-max animate-slideDown" onClick={e=>e.stopPropagation()}>
+                      <FilterPopover onClose={()=>setFiltersOpen(false)} />
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           </form>
@@ -143,28 +104,34 @@ const Header = () => {
           {/* Nav links */}
           <div className="hidden md:flex items-center space-x-6">
             <Link
-              to="/"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/') ? 'text-blue-400 bg-white/5 ring-1 ring-white/10' : 'text-gray-200 hover:text-white/90 hover:bg-white/5 hover:ring-1 hover:ring-white/10'}`}
-            >
-              Home
-            </Link>
-            <Link
               to="/movies"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/movies') ? 'text-blue-400 bg-white/5 ring-1 ring-white/10' : 'text-gray-200 hover:text-white/90 hover:bg-white/5 hover:ring-1 hover:ring-white/10'}`}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/movies') ? 'text-red-400 bg-white/5 ring-1 ring-white/10' : 'text-gray-200 hover:text-white/90 hover:bg-white/5 hover:ring-1 hover:ring-white/10'}`}
             >
               Movies
             </Link>
             <Link
+              to="/tv"
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/tv') ? 'text-red-400 bg-white/5 ring-1 ring-white/10' : 'text-gray-200 hover:text-white/90 hover:bg-white/5 hover:ring-1 hover:ring-white/10'}`}
+            >
+              TV Series
+            </Link>
+            <Link
+              to="/new"
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/new') ? 'text-red-400 bg-white/5 ring-1 ring-white/10' : 'text-gray-200 hover:text-white/90 hover:bg-white/5 hover:ring-1 hover:ring-white/10'}`}
+            >
+              New
+            </Link>
+            <Link
               to="/top-rated"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/top-rated') ? 'text-blue-400 bg-white/5 ring-1 ring-white/10' : 'text-gray-200 hover:text-white/90 hover:bg-white/5 hover:ring-1 hover:ring-white/10'}`}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/top-rated') ? 'text-red-400 bg-white/5 ring-1 ring-white/10' : 'text-gray-200 hover:text-white/90 hover:bg-white/5 hover:ring-1 hover:ring-white/10'}`}
             >
               Top Rated
             </Link>
             <Link
-              to="/reviews"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/reviews') ? 'text-blue-400 bg-white/5 ring-1 ring-white/10' : 'text-gray-200 hover:text-white/90 hover:bg-white/5 hover:ring-1 hover:ring-white/10'}`}
+              to="/people"
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/people') ? 'text-red-400 bg-white/5 ring-1 ring-white/10' : 'text-gray-200 hover:text-white/90 hover:bg-white/5 hover:ring-1 hover:ring-white/10'}`}
             >
-              Reviews
+              People
             </Link>
           </div>
 
@@ -183,14 +150,14 @@ const Header = () => {
       {showMobileSearch && (
         <div className="md:hidden px-4 pb-4">
           <form onSubmit={handleSearchSubmit} className="space-y-3">
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3.5 py-1.5 ring-1 ring-white/15">
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-xl rounded-full px-3.5 py-1 h-10 ring-1 ring-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.35)]">
               <i className="fas fa-search text-white/70"></i>
               <input
                 type="text"
                 value={searchInput}
                 onChange={handleSearchChange}
                 placeholder="Search movies..."
-                className="flex-1 bg-transparent outline-none text-sm text-white placeholder-white/60"
+                className="flex-1 bg-transparent outline-none text-sm leading-none text-white placeholder-white/60"
               />
               {/* submit via keyboard; no visible button */}
             </div>

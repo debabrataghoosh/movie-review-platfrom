@@ -11,6 +11,12 @@ const initialState = {
   onTheAir: [],
   topRatedMovies: [],
   nowPlayingMovies: [],
+  trendingMovies: [],
+  upcomingMovies: [],
+  trendingAllDay: [],
+  trendingAllWeek: [],
+  popularPeople: [],
+  personDetails: null,
   searchResults: [],
   selectedMovie: null,
   genres: [],
@@ -38,6 +44,12 @@ const actionTypes = {
   SET_ON_THE_AIR: 'SET_ON_THE_AIR',
   SET_TOP_RATED_MOVIES: 'SET_TOP_RATED_MOVIES',
   SET_NOW_PLAYING_MOVIES: 'SET_NOW_PLAYING_MOVIES',
+  SET_TRENDING_MOVIES: 'SET_TRENDING_MOVIES',
+  SET_UPCOMING_MOVIES: 'SET_UPCOMING_MOVIES',
+  SET_TRENDING_ALL_DAY: 'SET_TRENDING_ALL_DAY',
+  SET_TRENDING_ALL_WEEK: 'SET_TRENDING_ALL_WEEK',
+  SET_POPULAR_PEOPLE: 'SET_POPULAR_PEOPLE',
+  SET_PERSON_DETAILS: 'SET_PERSON_DETAILS',
   SET_SEARCH_RESULTS: 'SET_SEARCH_RESULTS',
   SET_SELECTED_MOVIE: 'SET_SELECTED_MOVIE',
   SET_GENRES: 'SET_GENRES',
@@ -81,6 +93,18 @@ const movieReducer = (state, action) => {
       return { ...state, topRatedMovies: action.payload, loading: false };
     case actionTypes.SET_NOW_PLAYING_MOVIES:
       return { ...state, nowPlayingMovies: action.payload, loading: false };
+    case actionTypes.SET_TRENDING_MOVIES:
+      return { ...state, trendingMovies: action.payload, loading: false };
+    case actionTypes.SET_UPCOMING_MOVIES:
+      return { ...state, upcomingMovies: action.payload, loading: false };
+    case actionTypes.SET_TRENDING_ALL_DAY:
+      return { ...state, trendingAllDay: action.payload, loading: false };
+    case actionTypes.SET_TRENDING_ALL_WEEK:
+      return { ...state, trendingAllWeek: action.payload, loading: false };
+    case actionTypes.SET_POPULAR_PEOPLE:
+      return { ...state, popularPeople: action.payload, loading: false };
+    case actionTypes.SET_PERSON_DETAILS:
+      return { ...state, personDetails: action.payload, loading: false };
     case actionTypes.SET_SEARCH_RESULTS:
       return { 
         ...state, 
@@ -222,6 +246,108 @@ export const MovieProvider = ({ children }) => {
       }
     },
 
+    // Fetch trending movies (week)
+    fetchTrendingMovies: async () => {
+      try {
+        const response = await movieService.getTrendingMoviesWeek();
+        const movies = response.results.map(transformIMDbMovie);
+        dispatch({ type: actionTypes.SET_TRENDING_MOVIES, payload: movies });
+      } catch (error) {
+        console.error('Failed to fetch trending movies:', error);
+      }
+    },
+
+    // Fetch mixed trending (all/day)
+    fetchTrendingAllDay: async () => {
+      try {
+        const response = await movieService.getTrendingAllDay();
+        const items = response.results.map(transformIMDbMovie);
+        dispatch({ type: actionTypes.SET_TRENDING_ALL_DAY, payload: items });
+      } catch (e) {
+        console.error('Failed to fetch trending all day:', e);
+      }
+    },
+
+    // Fetch mixed trending (all/week)
+    fetchTrendingAllWeek: async () => {
+      try {
+        const response = await movieService.getTrendingAllWeek();
+        const items = response.results.map(transformIMDbMovie);
+        dispatch({ type: actionTypes.SET_TRENDING_ALL_WEEK, payload: items });
+      } catch (e) {
+        console.error('Failed to fetch trending all week:', e);
+      }
+    },
+
+    // People
+    fetchPopularPeople: async () => {
+      try {
+        const response = await movieService.getPopularPeople();
+        // Map minimal fields (people have profile_path, name, known_for)
+        const people = (response.results || []).map(p => ({
+          id: String(p.id),
+          name: p.name,
+            knownFor: (p.known_for || []).map(k => transformIMDbMovie(k)).filter(Boolean).slice(0,4),
+          profile: p.profile_path ? `https://image.tmdb.org/t/p/w300${p.profile_path}` : 'https://via.placeholder.com/300x450/1f2937/ffffff?text=No+Image',
+          popularity: p.popularity || 0,
+          department: p.known_for_department || '',
+          gender: p.gender,
+        }));
+        dispatch({ type: actionTypes.SET_POPULAR_PEOPLE, payload: people });
+      } catch (e) {
+        console.error('Failed to fetch popular people:', e);
+      }
+    },
+    fetchPersonDetails: async (personId) => {
+      try {
+        actions.setLoading(true);
+        const details = await movieService.getPersonDetails(personId);
+        const credits = await movieService.getPersonCombinedCredits(personId);
+        const cast = (credits.cast || []).map(transformIMDbMovie).filter(Boolean);
+        const crew = (credits.crew || []).map(transformIMDbMovie).filter(Boolean);
+        const topKnown = [...cast, ...crew]
+          .filter(Boolean)
+          .sort((a,b) => (b.popularity || 0) - (a.popularity || 0))
+          .slice(0, 20);
+        const person = {
+          id: String(details.id),
+          name: details.name,
+          biography: details.biography,
+          birthday: details.birthday,
+          deathday: details.deathday,
+          placeOfBirth: details.place_of_birth,
+          profile: details.profile_path ? `https://image.tmdb.org/t/p/w500${details.profile_path}` : 'https://via.placeholder.com/500x750/1f2937/ffffff?text=No+Image',
+          homepage: details.homepage,
+          imdbId: details.imdb_id,
+          knownFor: topKnown,
+          knownForDepartment: details.known_for_department,
+          popularity: details.popularity,
+          gender: details.gender,
+        };
+        dispatch({ type: actionTypes.SET_PERSON_DETAILS, payload: person });
+      } catch (e) {
+        console.error('Failed to fetch person details:', e);
+        actions.setError('Failed to load person');
+      } finally {
+        actions.setLoading(false);
+      }
+    },
+
+    // Fetch upcoming movies
+    fetchUpcomingMovies: async () => {
+      try {
+        const response = await movieService.getUpcomingMovies();
+        const today = new Date();
+        const movies = response.results
+          .filter(m => m.release_date && new Date(m.release_date) >= today)
+          .sort((a,b) => new Date(a.release_date) - new Date(b.release_date))
+          .map(transformIMDbMovie);
+        dispatch({ type: actionTypes.SET_UPCOMING_MOVIES, payload: movies });
+      } catch (error) {
+        console.error('Failed to fetch upcoming movies:', error);
+      }
+    },
+
     // Fetch now playing movies
     fetchNowPlayingMovies: async () => {
       try {
@@ -334,6 +460,11 @@ export const MovieProvider = ({ children }) => {
     actions.fetchPopularMovies();
     actions.fetchGenres();
     actions.fetchNowPlayingMovies();
+    actions.fetchTopRatedMovies();
+    actions.fetchTrendingMovies();
+    actions.fetchUpcomingMovies();
+    actions.fetchTrendingAllDay();
+    actions.fetchTrendingAllWeek();
   }, []);
 
   return (

@@ -23,7 +23,7 @@ const MoviesGrid = ({ movies, onMovieClick, getUserRating, title = 'Featured Mov
         <div className="grid grid-cols-5 gap-6">
           {movies.map(movie => (
             <MovieCard
-              key={movie.id}
+              key={movie.id || movie.tmdbId}
               movie={movie}
               userRating={getUserRating ? getUserRating(movie.id) : 0}
               onClick={() => onMovieClick(movie)}

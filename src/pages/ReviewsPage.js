@@ -55,7 +55,7 @@ const ReviewsPage = () => {
             </p>
             <a
               href="/"
-              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center px-6 py-3 rounded-xl glass-primary text-white font-medium"
             >
               <i className="fas fa-film mr-2"></i>
               Discover Movies
@@ -94,7 +94,7 @@ const ReviewsPage = () => {
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium glass-button text-white">
                     <i className="fas fa-user mr-1"></i>
                     Your Review
                   </span>
