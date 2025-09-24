@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "cinerank-platform",
   "builds": [
     {
       "src": "package.json",
@@ -8,12 +7,8 @@
       "config": { "distDir": "build" }
     }
   ],
-  "routes": [
-    { "src": "/favicon.ico", "dest": "/favicon.ico" },
-    { "src": "/robots.txt", "dest": "/robots.txt" },
-    { "src": "/sitemap.xml", "dest": "/sitemap.xml" },
-    { "handle": "filesystem" },
-    { "src": "/.*", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {
