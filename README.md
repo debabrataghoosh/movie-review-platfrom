@@ -1,18 +1,21 @@
-# CineRank - Modern Movie Review & Rating Platform
+# CineRank – Modern Movies & People Discovery Platform
 
-A modern, full-featured React-based movie review and rating platform that integrates with The Movie Database (TMDB) API to provide real movie data and comprehensive user interaction features.
+A modern React + Tailwind application for discovering movies, TV series, and popular celebrities (people) using real data from The Movie Database (TMDB). The platform now emphasizes rich browsing, people exploration, progressive content reveal sections, and a refined glassmorphic UI.
 
-## 🚀 Features
+## 🚀 Core Features
 
-- **Real Movie Data**: Integration with TMDB API for up-to-date movie information
-- **Multi-Page Navigation**: React Router-powered navigation between different sections
-- **Advanced Search & Filtering**: Search movies and filter by genre, year, and rating
-- **User Ratings & Reviews**: Complete rating and review system with persistence
-- **Dark/Light Theme**: Beautiful theme switching with smooth transitions
-- **Responsive Design**: Fully responsive design using Tailwind CSS
-- **Modern UI/UX**: Clean, modern interface with smooth animations
-- **State Management**: Global state management using React Context API
-- **Local Storage**: Persistent user data storage
+- **Real Movie & TV Data**: TMDB-powered (movies, TV series, trending, upcoming, now playing)
+- **People / Celebs Module**: Browse popular celebrities and view detailed biography + "Known For" credits
+- **Progressive Sections**: Weekly Picks & Popular Celebs with in-place "See more" expansion (no page reload/navigation)
+- **Advanced Filter Popover**: Multi-genre selection, language filtering, rating/year sliders, clear & apply controls
+- **Stable Routing IDs**: Added internal `tmdbId` to ensure correct detail navigation (fixes mismatched pages)
+- **Unified Glass Buttons**: Reusable `LiquidButton` component for consistent glassmorphic CTAs
+- **Modern Grid UI**: Responsive, accessible layouts with consistent spacing & large expressive headings
+- **Local Ratings (Extensible)**: Context + localStorage patterns ready for persistent personalization
+- **Context-driven State**: Central `MovieContext` aggregates movies, TV, people & details
+- **Performance Friendly**: Conditional rendering, chunked lists, progressive reveal
+
+> Legacy "Reviews" navigation was removed from header; review logic may be reintroduced later in a focused UX flow.
 
 ## 🛠️ Tech Stack
 
@@ -53,12 +56,13 @@ A modern, full-featured React-based movie review and rating platform that integr
    npm install
    ```
 
-3. **Set up environment variables:**
+3. **Create environment file:** (the previous `.env.example` has been removed)
+   Create a `.env` file in the project root:
    ```bash
-   cp .env.example .env
+   touch .env
    ```
-   Edit `.env` and add your TMDB API key:
-   ```
+   Add your TMDB API key (obtain from TMDB account settings):
+   ```bash
    REACT_APP_TMDB_API_KEY=your_actual_api_key_here
    ```
 
@@ -76,59 +80,72 @@ A modern, full-featured React-based movie review and rating platform that integr
 npm run build
 ```
 
-## 🏗️ Project Structure
+## 🏗️ Project Structure (Key Paths)
 
 ```
 src/
 ├── components/          # Reusable React components
-│   ├── Header.js       # Navigation header with routing
-│   ├── Hero.js         # Hero section with search
-│   ├── SearchFilters.js # Advanced filtering controls
-│   ├── MoviesGrid.js   # Movies grid display
-│   ├── MovieCard.js    # Individual movie cards
-│   ├── MovieModal.js   # Detailed movie modal
-│   ├── StarRating.js   # Interactive star rating
-│   └── Footer.js       # Footer component
+│   ├── Header.js             # Navigation header (now includes People link)
+│   ├── Hero.js               # Hero section (primary call to explore)
+│   ├── WeeklyPicks.js        # Progressive multi-row movie showcase
+│   ├── PopularCelebsSection.js # Progressive reveal celeb avatars
+│   ├── PersonCard.js         # Circular celeb avatar card
+│   ├── LiquidButton.js       # Reusable glassmorphic button
+│   ├── FilterPopover.js      # Advanced filtering popover (genres/language/year/rating)
+│   ├── MultiGenreFilter.js   # Internal multi-select genre control
+│   ├── MoviesGrid.js         # Generic grid renderer
+│   ├── MovieCard.js          # Movie/TV card with stable tmdbId
+│   ├── MovieModal.js         # (Legacy / optional detail modal)
+│   ├── StarRating.js         # Interactive rating display
+│   └── Footer.js             # Footer component
 ├── pages/              # Page components for routing
-│   ├── HomePage.js     # Home page with hero and popular movies
-│   ├── MoviesPage.js   # All movies with filtering
-│   ├── TopRatedPage.js # Top-rated movies
-│   └── ReviewsPage.js  # User reviews page
+│   ├── HomePage.js         # Home: Hero, Weekly Picks, Popular Celebs
+│   ├── MoviesPage.js       # Movies listing with filters
+│   ├── TvSeriesPage.js     # TV series listing
+│   ├── TopRatedPage.js     # Top rated media
+│   ├── NewReleasesPage.js  # Newly released / upcoming content
+│   ├── PeoplePage.js       # Paginated grid of popular people
+│   ├── PersonDetailPage.js # Biography + Known For credits
+│   └── MovieDetailPage.js  # Detailed movie information
 ├── context/            # React Context for state management
-│   └── MovieContext.js # Global movie state and actions
+│   └── MovieContext.js     # Global state: movies, tv, people, details
 ├── services/           # API service layer
-│   └── tmdbService.js  # TMDB API integration
+│   ├── movieService.js     # Aggregated service (movies, tv, people)
+│   └── tmdbService.js      # Low-level TMDB API integration
 ├── hooks/              # Custom React hooks
 │   └── useLocalStorage.js # localStorage management
-├── data/               # Static/fallback data
-│   └── moviesData.js   # Fallback movie data
+├── data/                   # Static/fallback data
+│   └── moviesData.js       # Fallback movie sample data
+├── utils/                  # Utility helpers
+│   └── releaseMeta.js      # Release date -> badge/meta helpers
 ├── App.js              # Main app with routing
 ├── App.css             # Tailwind CSS and custom styles
 └── index.js            # React entry point
 ```
 
-## 🎯 Key Components
+## 🎯 Key Concepts & Components
 
-### API Integration
-- **TMDB Service**: Complete API wrapper with error handling
-- **Image Handling**: Optimized image loading with fallbacks
-- **Data Transformation**: Consistent data format across the app
+### API & Data
+- **movieService**: Consolidates fetch logic for movies, TV, trending, upcoming, people & person details
+- **Stable IDs**: Transformer adds `tmdbId` to ensure consistent routing and key usage
+- **Combined Credits**: Person detail page uses merged credits to power "Known For" section
 
 ### State Management
-- **MovieContext**: Global state for movies, search, and filters
-- **Custom Hooks**: Reusable logic for ratings, reviews, and themes
-- **Local Storage**: Persistent user data across sessions
+- **MovieContext**: Extended to include `popularPeople`, `personDetails`, plus existing movie & TV slices
+- **Local Storage Hook**: Ready for persisting ratings/user preferences
+- **Composable Filters**: Dynamic genre & language lists populated from API
 
 ### Routing & Navigation
-- **React Router**: Multi-page application structure
-- **Active Link Highlighting**: Visual feedback for current page
-- **Protected Routes**: Future-ready for authentication
+- **Routes Added**: `/people`, `/person/:id`, `/tv-series`, `/top-rated`, `/new-releases`
+- **Removed From Nav**: Legacy `/reviews` link (code retained for future iteration)
+- **Deep Linking**: Stable detail page URLs using TMDB IDs
 
-### User Features
-- **Interactive Ratings**: 5-star rating system with hover effects
-- **Review System**: Full CRUD operations for user reviews
-- **Theme Switching**: Smooth dark/light mode transitions
-- **Search & Filters**: Real-time search with advanced filtering
+### User-Facing Features
+- **Weekly Picks**: Curated section revealed row-by-row (5 items per expansion)
+- **Popular Celebs**: Circular avatar grid with +5 reveal increments after first 10
+- **Advanced Filters**: Multi-genre, language, year, and rating range (popover UI)
+- **Glass UI Buttons**: `LiquidButton` variants (primary / ghost) unify CTAs
+- **Movie & Person Detail**: Rich meta sections (biography, departments, known for)
 
 ## 🎨 Styling & Design
 
@@ -159,26 +176,27 @@ The project includes custom Tailwind configuration with:
 - Dark mode support
 - Responsive breakpoints
 
-## 🚀 Features in Detail
+## 🚀 Features in Detail (Expanded)
 
-### TMDB API Integration
-- Popular, top-rated, and now-playing movies
-- Advanced movie search
-- Detailed movie information
-- High-quality movie posters and backdrops
-- Genre and release information
+### TMDB & People Integration
+- Popular, top-rated, trending (daily/weekly), upcoming, now-playing movies
+- TV series category support
+- Popular People list + individual person detail (bio, departments, known for credits)
+- Stable link generation via `tmdbId`
+- Poster/profile image handling with graceful fallback
 
-### User Experience
-- **Smooth Navigation**: Instant page transitions
-- **Loading States**: Visual feedback during API calls
-- **Error Handling**: Graceful fallbacks for API failures
-- **Accessibility**: ARIA labels and keyboard navigation
+### User Experience & UI
+- **Progressive Reveal**: Incremental content avoids overwhelming the user
+- **Glassmorphic Buttons**: Consistent interaction affordances
+- **Responsive Grids**: Optimized layout at 2 / 3 / 5 column breakpoints
+- **Hover Micro-interactions**: Subtle scale + ring effects on avatars/cards
+- **Error & Empty States**: Safe-guards for missing profiles, ids, or data chunks
 
-### Performance Optimizations
-- **Lazy Loading**: Images load on demand
-- **Code Splitting**: Optimized bundle sizes
-- **Caching**: Efficient data caching strategies
-- **Responsive Images**: Multiple image sizes for different devices
+### Performance Considerations
+- Chunked list rendering (rows of 5)
+- Avoids unnecessary re-renders via memoized groups
+- Minimal external dependencies (hand-rolled `cx` helper)
+- Conditional feature rendering to reduce initial payload
 
 ## 🔮 Future Enhancements
 
@@ -190,6 +208,26 @@ The project includes custom Tailwind configuration with:
 - [ ] Progressive Web App (PWA) features
 - [ ] Movie recommendations based on ratings
 - [ ] Export/import user data
+
+## 🧭 Changelog (Recent)
+
+### 2025-09 (People & UI Expansion)
+- Added People module: `PeoplePage`, `PersonDetailPage`, `PersonCard`
+- Added Popular Celebs progressive section on Home
+- Added Weekly Picks progressive grid component
+- Introduced `LiquidButton` for unified glassmorphic button styling
+- Implemented advanced `FilterPopover` with multi-genre + language filters
+- Stable `tmdbId` mapping for all media to fix incorrect detail navigations
+- Removed legacy OMDb service & obsolete `.env.example`
+- Spacing & typography refinements (section headings 3xl/4xl, consistent margins)
+- Replaced ad-hoc buttons with `LiquidButton` variants
+- Added `releaseMeta.js` utility for release labeling
+
+### Earlier (Foundational)
+- Core TMDB movie fetching, rating logic, base routing & theming
+- Initial review scaffolding (currently hidden from navigation)
+
+---
 
 ## 🤝 Contributing
 
