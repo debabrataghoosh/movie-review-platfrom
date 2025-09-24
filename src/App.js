@@ -13,6 +13,7 @@ import PeoplePage from './pages/PeoplePage';
 import PersonDetailPage from './pages/PersonDetailPage';
 import MovieDetailPage from './pages/MovieDetailPage';
 import { MovieProvider } from './context/MovieContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import { useTheme, useUserRatings, useUserReviews } from './hooks/useLocalStorage';
 import './App.css';
 
@@ -86,7 +87,9 @@ function AppContent() {
 function App() {
   return (
     <MovieProvider>
-      <AppContent />
+      <ErrorBoundary>
+        <AppContent />
+      </ErrorBoundary>
     </MovieProvider>
   );
 }
