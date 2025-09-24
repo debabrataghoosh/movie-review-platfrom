@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://cinerank.example.com/</loc></url>
-  <url><loc>https://cinerank.example.com/movies</loc></url>
-  <url><loc>https://cinerank.example.com/tv-series</loc></url>
-  <url><loc>https://cinerank.example.com/top-rated</loc></url>
-  <url><loc>https://cinerank.example.com/new-releases</loc></url>
-  <url><loc>https://cinerank.example.com/people</loc></url>
+  <url><loc>https://cinerank-tau.vercel.app/</loc></url>
+  <url><loc>https://cinerank-tau.vercel.app/movies</loc></url>
+  <url><loc>https://cinerank-tau.vercel.app/tv-series</loc></url>
+  <url><loc>https://cinerank-tau.vercel.app/top-rated</loc></url>
+  <url><loc>https://cinerank-tau.vercel.app/new-releases</loc></url>
+  <url><loc>https://cinerank-tau.vercel.app/people</loc></url>
 </urlset>

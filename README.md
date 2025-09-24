@@ -2,6 +2,12 @@
 
 A modern React + Tailwind application for discovering movies, TV series, and popular celebrities (people) using real data from The Movie Database (TMDB). The platform now emphasizes rich browsing, people exploration, progressive content reveal sections, and a refined glassmorphic UI.
 
+## 🌐 Live Demo
+
+Production Deployment: https://cinerank-tau.vercel.app
+
+> If the link 404s shortly after a new deploy, wait a few seconds and refresh while DNS / CDN edges propagate.
+
 ## 🚀 Core Features
 
 - **Real Movie & TV Data**: TMDB-powered (movies, TV series, trending, upcoming, now playing)
