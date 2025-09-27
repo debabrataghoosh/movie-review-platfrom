@@ -4,6 +4,7 @@ import { movieService, transformIMDbMovie } from '../services/movieService';
 import { buildTmdbImageUrl } from '../services/tmdbService';
 import { getImdbMeta } from '../services/imdbService';
 import LiquidButton from '../components/LiquidButton';
+import TrailerModal from '../components/TrailerModal';
 import { computeReleaseMeta } from '../utils/releaseMeta';
 
 // Lightweight inline credits section component (could be extracted later)
@@ -263,6 +264,8 @@ const MovieDetailPage = () => {
   const [reviews, setReviews] = useState([]);
   const [recs, setRecs] = useState([]);
   const [imdbMeta, setImdbMeta] = useState({ imdbRating: null, imdbVotes: null, metascore: null, rottenTomatoes: null });
+  const [trailerKey, setTrailerKey] = useState(null);
+  const [trailerTitle, setTrailerTitle] = useState('Trailer');
 
   useEffect(() => {
     let cancelled = false;
@@ -311,6 +314,29 @@ const MovieDetailPage = () => {
   const poster = data.poster;
   const backdrop = data.backdrop;
   const { dateLabel, daysLeft, isFuture, iso, badgeColor } = computeReleaseMeta(data.releaseDate, data.year);
+
+  const pickBestTrailer = (videos) => {
+    const list = Array.isArray(videos?.results) ? videos.results : [];
+    const yt = list.filter(v => v.site === 'YouTube');
+    const official = yt.find(v => (v.type === 'Trailer' || v.type === 'Teaser') && v.official) || yt.find(v => v.type === 'Trailer') || yt[0];
+    return official || null;
+  };
+
+  const handleWatchTrailer = async () => {
+    try {
+      // We need fresh details to ensure videos are present
+      const detail = await movieService.getMovieDetails(id);
+      const best = pickBestTrailer(detail?.videos);
+      if (best?.key) {
+        setTrailerKey(best.key);
+        setTrailerTitle(best.name || `${data.title} • Trailer`);
+      } else {
+        alert('Trailer not available for this title.');
+      }
+    } catch (e) {
+      alert('Failed to load trailer. Please try again later.');
+    }
+  };
 
   return (
   <section className="relative min-h-[75vh] pt-24 pb-24 text-white overflow-hidden">
@@ -384,7 +410,7 @@ const MovieDetailPage = () => {
             )}
             <p className="text-lg leading-relaxed text-white/85 max-w-3xl mb-8">{data.plot}</p>
             <div className="flex flex-wrap gap-4">
-              <LiquidButton variant="primary" icon={<i className="fas fa-play" />}>Watch Trailer</LiquidButton>
+              <LiquidButton variant="primary" icon={<i className="fas fa-play" />} onClick={handleWatchTrailer}>Watch Trailer</LiquidButton>
               <LiquidButton variant="ghost" icon={<i className="fas fa-plus" />}>Add to List</LiquidButton>
             </div>
           </div>
@@ -447,6 +473,7 @@ const MovieDetailPage = () => {
           </div>
         )}
       </div>
+      {trailerKey && <TrailerModal videoKey={trailerKey} title={trailerTitle} onClose={() => setTrailerKey(null)} />}
     </section>
   );
 };

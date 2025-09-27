@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useMovieContext } from '../context/MovieContext';
 import { getBestTmdbBackdrop } from '../services/tmdbService';
 import LiquidButton from './LiquidButton';
+import TrailerModal from './TrailerModal';
+import { movieService } from '../services/movieService';
 
 const Hero = () => {
   const { state } = useMovieContext();
@@ -42,6 +44,40 @@ const Hero = () => {
 
   const bgList = featuredList.length ? featuredList : (current ? [current] : []);
 
+  // Trailer modal state
+  const [trailerKey, setTrailerKey] = useState(null);
+  const [trailerTitle, setTrailerTitle] = useState('Trailer');
+  const closeTrailer = () => setTrailerKey(null);
+
+  const pickBestTrailer = (videos) => {
+    const list = Array.isArray(videos?.results) ? videos.results : [];
+    const yt = list.filter(v => v.site === 'YouTube');
+    const official = yt.find(v => (v.type === 'Trailer' || v.type === 'Teaser') && v.official) || yt.find(v => v.type === 'Trailer') || yt[0];
+    return official || null;
+  };
+
+  const handlePlayTrailer = async () => {
+    try {
+      const item = current;
+      if (!item) return;
+      // If detail already in state shape contains videos in future, use that; otherwise fetch
+      let videoPayload = item.videos;
+      if (!videoPayload) {
+        const detail = await movieService.getMovieDetails(item.tmdbId || item.id);
+        videoPayload = detail?.videos;
+      }
+      const best = pickBestTrailer(videoPayload);
+      if (best?.key) {
+        setTrailerKey(best.key);
+        setTrailerTitle(best.name || `${item.title} • Trailer`);
+      } else {
+        alert('Trailer not available for this title yet.');
+      }
+    } catch (e) {
+      alert('Failed to load trailer. Please try again later.');
+    }
+  };
+
   return (
     <section className="relative text-white pt-24 h-[70vh] md:h-[72vh] lg:h-[80vh] overflow-hidden flex items-stretch">
       <div className="absolute inset-0 z-0 overflow-hidden">
@@ -81,7 +117,7 @@ const Hero = () => {
               {typeof current?.rating === 'number' && <span className="inline-flex items-center gap-2 text-sm"><i className="fas fa-star text-yellow-400" />{(current.rating * 2).toFixed(1)} / 10</span>}
             </div>
             <div className="mt-7 flex flex-wrap gap-3">
-              <LiquidButton variant="primary" icon={<i className="fas fa-play" />}>Play Trailer</LiquidButton>
+              <LiquidButton variant="primary" icon={<i className="fas fa-play" />} onClick={handlePlayTrailer}>Play Trailer</LiquidButton>
               <LiquidButton variant="ghost" icon={<i className="fas fa-search" />} as="a" href="#search">Explore</LiquidButton>
             </div>
           </div>
@@ -103,6 +139,7 @@ const Hero = () => {
           </button>
         </div>
       )}
+      {trailerKey && <TrailerModal videoKey={trailerKey} title={trailerTitle} onClose={closeTrailer} />}
     </section>
   );
 };
