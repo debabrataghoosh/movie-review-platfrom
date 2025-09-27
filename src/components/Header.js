@@ -1,16 +1,28 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useMovieContext } from '../context/MovieContext';
 import FilterPopover from './FilterPopover';
+import { movieService } from '../services/movieService';
+import { useAuth } from '../context/AuthContext';
 
 const Header = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const { state, actions } = useMovieContext();
   const { genres, filters, searchQuery } = state;
   const [searchInput, setSearchInput] = useState(searchQuery || '');
+  const { user, isAuthenticated, openLogin, signOut } = useAuth();
+
+  // Autocomplete state
+  const [suggestions, setSuggestions] = useState([]);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [highlightIndex, setHighlightIndex] = useState(-1);
+  const [suggestLoading, setSuggestLoading] = useState(false);
+  const desktopComboRef = useRef(null);
+  const mobileComboRef = useRef(null);
 
   const isActive = (path) => location.pathname === path;
 
@@ -28,7 +40,15 @@ const Header = () => {
     e.preventDefault();
     const q = searchInput.trim();
     if (q) {
-      actions.searchMovies(q);
+      // If a suggestion is highlighted, go to it; else perform full search
+      const sel = highlightIndex >= 0 ? suggestions[highlightIndex] : null;
+      if (sel) {
+        navigate(sel.href);
+        setSuggestions([]);
+        setSuggestionsOpen(false);
+      } else {
+        actions.searchMovies(q);
+      }
     } else {
       actions.clearSearch();
       actions.fetchPopularMovies();
@@ -42,12 +62,99 @@ const Header = () => {
       actions.clearSearch();
       actions.fetchPopularMovies();
     }
+    // open suggestions if there's input
+    setSuggestionsOpen(!!val.trim());
+    setHighlightIndex(-1);
   };
 
   const applyFilterChange = (type, value) => {
     const next = { ...filters, [type]: value };
     actions.setFilters(next);
     actions.discoverMovies(next);
+  };
+
+  // Debounced multi-search for suggestions
+  useEffect(() => {
+    const q = searchInput.trim();
+    if (!q) {
+      setSuggestions([]);
+      setSuggestionsOpen(false);
+      setSuggestLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setSuggestLoading(true);
+    const id = setTimeout(async () => {
+      try {
+        const res = await movieService.multiSearch(q, 1);
+        if (cancelled) return;
+        const top = (res.results || [])
+          .filter(r => r.media_type === 'movie' || r.media_type === 'tv' || r.media_type === 'person')
+          .slice(0, 8)
+          .map(r => {
+            const media = r.media_type;
+            const title = r.title || r.name || 'Untitled';
+            const subtitle = media === 'person' ? (r.known_for_department || 'Person') : (r.release_date || r.first_air_date || '').slice(0,4);
+            const img = r.profile_path || r.poster_path ? `https://image.tmdb.org/t/p/w92${r.profile_path || r.poster_path}` : '';
+            const href = media === 'person' ? `/person/${r.id}` : `/title/${r.id}`;
+            return { id: String(r.id), media, title, subtitle, img, href };
+          });
+        setSuggestions(top);
+        setSuggestionsOpen(top.length > 0);
+      } catch (e) {
+        if (!cancelled) {
+          setSuggestions([]);
+          setSuggestionsOpen(false);
+        }
+      } finally {
+        if (!cancelled) setSuggestLoading(false);
+      }
+    }, 250);
+    return () => { cancelled = true; clearTimeout(id); };
+  }, [searchInput]);
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      const d = desktopComboRef.current;
+      const m = mobileComboRef.current;
+      const inDesktop = d && d.contains(e.target);
+      const inMobile = m && m.contains(e.target);
+      if (!inDesktop && !inMobile) {
+        setSuggestionsOpen(false);
+        setHighlightIndex(-1);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  // Close suggestions when route changes
+  useEffect(() => {
+    setSuggestionsOpen(false);
+    setHighlightIndex(-1);
+  }, [location.pathname]);
+
+  const onKeyDown = (e) => {
+    if (!suggestionsOpen || suggestions.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightIndex(i => (i + 1) % suggestions.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightIndex(i => (i - 1 + suggestions.length) % suggestions.length);
+    } else if (e.key === 'Enter') {
+      const sel = highlightIndex >= 0 ? suggestions[highlightIndex] : null;
+      if (sel) {
+        e.preventDefault();
+        navigate(sel.href);
+        setSuggestionsOpen(false);
+        setSuggestions([]);
+      }
+    } else if (e.key === 'Escape') {
+      setSuggestionsOpen(false);
+      setHighlightIndex(-1);
+    }
   };
 
   return (
@@ -68,14 +175,15 @@ const Header = () => {
 
           {/* Search + Filters (desktop) */}
           <form onSubmit={handleSearchSubmit} className="flex-1 hidden md:flex items-center justify-center">
-            <div className="relative w-full max-w-3xl">
-              <div className="group flex items-center gap-2 bg-white/10 backdrop-blur-xl rounded-full ring-1 ring-white/15 px-3.5 py-1 h-10 shadow-[0_8px_32px_rgba(0,0,0,0.35)]">
+            <div className="relative w-full max-w-3xl" ref={desktopComboRef}>
+              <div className="group flex items-center gap-2 bg-white/10 backdrop-blur-xl rounded-full ring-1 ring-white/15 px-3.5 py-1 h-10 shadow-[0_8px_32px_rgba(0,0,0,0.35)]" role="combobox" aria-expanded={suggestionsOpen} aria-haspopup="listbox" aria-owns="header-suggestions">
                 <i className="fas fa-search text-white/60"></i>
                 <input
                   type="text"
                   value={searchInput}
                   onChange={handleSearchChange}
-                  placeholder="Search movies, actors, directors..."
+                  onKeyDown={onKeyDown}
+                  placeholder="Search movies, TV shows, people..."
                   className="flex-1 bg-transparent text-white placeholder-white/60 focus:outline-none text-sm leading-none"
                   aria-label="Search movies"
                 />
@@ -98,6 +206,47 @@ const Header = () => {
                   </div>
                 )}
               </div>
+              {suggestionsOpen && (
+                <div className="absolute left-0 right-0 top-full mt-2 z-50">
+                  <div className="bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl ring-1 ring-white/10 overflow-hidden">
+                    {suggestions.length === 0 && (
+                      <div className="px-4 py-3 text-sm text-white/70">{suggestLoading ? 'Searching…' : 'No results'}</div>
+                    )}
+                    {suggestions.length > 0 && (
+                      <ul id="header-suggestions" role="listbox" aria-label="Search suggestions" className="max-h-96 overflow-auto divide-y divide-white/5">
+                        {suggestions.map((s, idx) => (
+                          <li key={`${s.media}-${s.id}`} role="option" aria-selected={idx===highlightIndex}>
+                            <button
+                              type="button"
+                              onMouseEnter={() => setHighlightIndex(idx)}
+                              onClick={() => { navigate(s.href); setSuggestionsOpen(false); setSuggestions([]); }}
+                              className={`w-full flex items-center gap-3 px-3 py-2 text-left transition ${idx===highlightIndex ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                            >
+                              <div className="w-9 h-9 rounded overflow-hidden bg-white/10 flex items-center justify-center">
+                                {s.img ? (
+                                  <img src={s.img} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                  <i className="fas fa-film text-white/60 text-sm" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm text-white truncate">{s.title}</div>
+                                <div className="text-xs text-white/60 capitalize truncate flex items-center gap-2">
+                                  <span className="inline-flex items-center gap-1">
+                                    {s.media === 'person' ? <i className="fas fa-user" /> : (s.media === 'tv' ? <i className="fas fa-tv" /> : <i className="fas fa-film" />)}
+                                    {s.media}
+                                  </span>
+                                  {s.subtitle && <span>• {s.subtitle}</span>}
+                                </div>
+                              </div>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </form>
 
@@ -133,6 +282,21 @@ const Header = () => {
             >
               People
             </Link>
+            <Link
+              to="/wishlist"
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/wishlist') ? 'text-red-400 bg-white/5 ring-1 ring-white/10' : 'text-gray-200 hover:text-white/90 hover:bg-white/5 hover:ring-1 hover:ring-white/10'}`}
+            >
+              <i className="fas fa-heart mr-1 text-red-400" /> Wishlist
+            </Link>
+            {/* Account */}
+            {isAuthenticated ? (
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-white/80">Hi, {user.name}</span>
+                <button onClick={signOut} className="px-3 py-1.5 rounded-md text-xs bg-white/5 hover:bg-white/10 text-white/80">Sign out</button>
+              </div>
+            ) : (
+              <button onClick={openLogin} className="px-3 py-1.5 rounded-md text-xs bg-white/5 hover:bg-white/10 text-white/80">Sign in</button>
+            )}
           </div>
 
           {/* Mobile search toggle */}
@@ -150,16 +314,58 @@ const Header = () => {
       {showMobileSearch && (
         <div className="md:hidden px-4 pb-4">
           <form onSubmit={handleSearchSubmit} className="space-y-3">
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-xl rounded-full px-3.5 py-1 h-10 ring-1 ring-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.35)]">
+            <div className="relative flex items-center gap-2 bg-white/10 backdrop-blur-xl rounded-full px-3.5 py-1 h-10 ring-1 ring-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.35)]" ref={mobileComboRef} role="combobox" aria-expanded={suggestionsOpen} aria-haspopup="listbox" aria-owns="header-suggestions-mobile">
               <i className="fas fa-search text-white/70"></i>
               <input
                 type="text"
                 value={searchInput}
                 onChange={handleSearchChange}
-                placeholder="Search movies..."
+                onKeyDown={onKeyDown}
+                placeholder="Search movies, TV, people..."
                 className="flex-1 bg-transparent outline-none text-sm leading-none text-white placeholder-white/60"
               />
               {/* submit via keyboard; no visible button */}
+              {suggestionsOpen && (
+                <div className="absolute left-0 right-0 top-full mt-2 z-50">
+                  <div className="bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl ring-1 ring-white/10 overflow-hidden">
+                    {suggestions.length === 0 && (
+                      <div className="px-4 py-3 text-sm text-white/70">{suggestLoading ? 'Searching…' : 'No results'}</div>
+                    )}
+                    {suggestions.length > 0 && (
+                      <ul id="header-suggestions-mobile" role="listbox" aria-label="Search suggestions" className="max-h-96 overflow-auto divide-y divide-white/5">
+                        {suggestions.map((s, idx) => (
+                          <li key={`${s.media}-${s.id}`} role="option" aria-selected={idx===highlightIndex}>
+                            <button
+                              type="button"
+                              onMouseEnter={() => setHighlightIndex(idx)}
+                              onClick={() => { navigate(s.href); setSuggestionsOpen(false); setSuggestions([]); setShowMobileSearch(false); }}
+                              className={`w-full flex items-center gap-3 px-3 py-2 text-left transition ${idx===highlightIndex ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                            >
+                              <div className="w-9 h-9 rounded overflow-hidden bg-white/10 flex items-center justify-center">
+                                {s.img ? (
+                                  <img src={s.img} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                  <i className="fas fa-film text-white/60 text-sm" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm text-white truncate">{s.title}</div>
+                                <div className="text-xs text-white/60 capitalize truncate flex items-center gap-2">
+                                  <span className="inline-flex items-center gap-1">
+                                    {s.media === 'person' ? <i className="fas fa-user" /> : (s.media === 'tv' ? <i className="fas fa-tv" /> : <i className="fas fa-film" />)}
+                                    {s.media}
+                                  </span>
+                                  {s.subtitle && <span>• {s.subtitle}</span>}
+                                </div>
+                              </div>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
             <div className="grid grid-cols-3 gap-2">
               <select
@@ -193,6 +399,16 @@ const Header = () => {
                 <option value="2">2+ Stars</option>
                 <option value="1">1+ Stars</option>
               </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link to="/wishlist" className={`flex-1 text-center px-3 py-2 rounded-lg ${isActive('/wishlist') ? 'bg-white/10 ring-1 ring-white/10' : 'bg-white/5'} text-white text-sm`}>
+                <i className="fas fa-heart text-red-400 mr-1"/> Wishlist
+              </Link>
+              {isAuthenticated ? (
+                <button type="button" onClick={signOut} className="px-3 py-2 rounded-lg bg-white/5 text-white text-sm">Sign out</button>
+              ) : (
+                <button type="button" onClick={openLogin} className="px-3 py-2 rounded-lg bg-white/5 text-white text-sm">Sign in</button>
+              )}
             </div>
           </form>
         </div>

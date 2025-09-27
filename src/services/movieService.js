@@ -114,6 +114,18 @@ export const combinedMovieService = {
     return { results, page: r.data.page, total_pages: r.data.total_pages, total_results: r.data.total_results };
   },
 
+  // Multi search across movies, TV, and people (for autocomplete suggestions)
+  multiSearch: async (query, page = 1) => {
+    if (!query || !String(query).trim()) {
+      return { results: [], page: 1, total_pages: 1, total_results: 0 };
+    }
+    const r = await tmdbClient.get('/search/multi', {
+      params: { query, page, include_adult: false }
+    });
+    const results = (r.data.results || []).filter(it => ['movie', 'tv', 'person'].includes(it.media_type));
+    return { results, page: r.data.page, total_pages: r.data.total_pages, total_results: r.data.total_results };
+  },
+
   getMovieDetails: async (tmdbId) => {
     // Try movie then TV, include external_ids so we can map IMDb
     try {
@@ -159,7 +171,7 @@ export const combinedMovieService = {
   },
 
   discoverMovies: async (filters = {}, page = 1) => {
-    const params = { page, include_adult: false, ...filters };
+    const params = { page, include_adult: false, sort_by: 'popularity.desc', ...filters };
     const r = await tmdbClient.get('/discover/movie', { params });
     return { results: r.data.results || [], page: r.data.page, total_pages: r.data.total_pages, total_results: r.data.total_results };
   },

@@ -12,7 +12,11 @@ import NewReleasesPage from './pages/NewReleasesPage';
 import PeoplePage from './pages/PeoplePage';
 import PersonDetailPage from './pages/PersonDetailPage';
 import MovieDetailPage from './pages/MovieDetailPage';
+import WishlistPage from './pages/WishlistPage';
 import { MovieProvider } from './context/MovieContext';
+import { AuthProvider } from './context/AuthContext';
+import { WishlistProvider } from './context/WishlistContext';
+import LoginModal from './components/LoginModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useTheme, useUserRatings, useUserReviews } from './hooks/useLocalStorage';
 import './App.css';
@@ -64,6 +68,7 @@ function AppContent() {
             <Route path="/people" element={<PeoplePage />} />
             <Route path="/person/:id" element={<PersonDetailPage />} />
             <Route path="/title/:id" element={<MovieDetailPage />} />
+            <Route path="/wishlist" element={<WishlistPage />} />
           </Routes>
         </main>
 
@@ -86,11 +91,16 @@ function AppContent() {
 
 function App() {
   return (
-    <MovieProvider>
-      <ErrorBoundary>
-        <AppContent />
-      </ErrorBoundary>
-    </MovieProvider>
+    <AuthProvider>
+      <WishlistProvider>
+        <MovieProvider>
+          <ErrorBoundary>
+            <AppContent />
+            <LoginModal />
+          </ErrorBoundary>
+        </MovieProvider>
+      </WishlistProvider>
+    </AuthProvider>
   );
 }
 

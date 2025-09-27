@@ -6,7 +6,7 @@ import { useMovieContext } from '../context/MovieContext';
 
 const MoviesPage = ({ onMovieClick, getUserRating }) => {
   const { state, actions } = useMovieContext();
-  const { movies, topRatedMovies, nowPlayingMovies, trendingMovies, upcomingMovies, loading, genres } = state;
+  const { movies, topRatedMovies, nowPlayingMovies, trendingMovies, upcomingMovies, loading, genres, currentPage, totalPages, filters } = state;
 
   // Local state for multi-genre selection
   const [selectedGenres, setSelectedGenres] = useState([]);
@@ -21,12 +21,21 @@ const MoviesPage = ({ onMovieClick, getUserRating }) => {
   }, [movies, getUserRating]);
 
   useEffect(() => {
-    // Popular movies fetched in provider on app start.
+    // Curated sections
     if (!topRatedMovies.length) actions.fetchTopRatedMovies();
     if (!nowPlayingMovies.length) actions.fetchNowPlayingMovies();
     if (!trendingMovies.length) actions.fetchTrendingMovies();
     if (!upcomingMovies.length) actions.fetchUpcomingMovies();
+    // Full catalog (Discover) - initial page
+    if (!movies.length) actions.discoverMovies({}, 1, false);
   }, [topRatedMovies.length, nowPlayingMovies.length, trendingMovies.length, upcomingMovies.length]);
+
+  const loadMore = () => {
+    if (loading) return;
+    if (currentPage < totalPages) {
+      actions.discoverMovies(filters || {}, currentPage + 1, true);
+    }
+  };
 
   // Filter movies for genre section
   const genreFilteredMovies = useMemo(() => {
@@ -95,6 +104,27 @@ const MoviesPage = ({ onMovieClick, getUserRating }) => {
             )}
           </div>
         )}
+        {/* Full Catalog (All Movies) */}
+        <div className="mt-10">
+          <h2 className="text-2xl font-bold text-white tracking-tight mb-4">All Movies (TMDB Catalog)</h2>
+          <MoviesGrid
+            title="All Movies"
+            movies={movies}
+            onMovieClick={onMovieClick}
+            getUserRating={getUserRating}
+          />
+          {currentPage < totalPages && (
+            <div className="flex justify-center">
+              <button
+                onClick={loadMore}
+                disabled={loading}
+                className="px-5 py-2 rounded-full bg-white/10 hover:bg-white/15 text-white text-sm ring-1 ring-white/10 disabled:opacity-50"
+              >
+                {loading ? 'Loading…' : 'Load More'}
+              </button>
+            </div>
+          )}
+        </div>
         {personalized?.length > 0 && (
           <WeeklyPicks
             title="Personalized"

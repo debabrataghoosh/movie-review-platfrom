@@ -6,6 +6,8 @@ import { getImdbMeta } from '../services/imdbService';
 import LiquidButton from '../components/LiquidButton';
 import TrailerModal from '../components/TrailerModal';
 import { computeReleaseMeta } from '../utils/releaseMeta';
+import { useWishlist } from '../context/WishlistContext';
+import { useAuth } from '../context/AuthContext';
 
 // Lightweight inline credits section component (could be extracted later)
 const CreditsSection = ({ rawId, rawData, fullCredits }) => {
@@ -256,6 +258,8 @@ const ReviewsSection = ({ reviews, imdbMeta }) => {
 
 const MovieDetailPage = () => {
   const { id } = useParams();
+  const { isWishlisted, toggle } = useWishlist();
+  const { isAuthenticated, openLogin } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -320,6 +324,13 @@ const MovieDetailPage = () => {
     const yt = list.filter(v => v.site === 'YouTube');
     const official = yt.find(v => (v.type === 'Trailer' || v.type === 'Teaser') && v.official) || yt.find(v => v.type === 'Trailer') || yt[0];
     return official || null;
+  };
+
+  const onToggleWishlist = () => {
+    if (!data) return;
+    if (!isAuthenticated) { openLogin(); return; }
+    // Use the transformed 'data' which has normalized fields and id
+    toggle({ id: String(data.tmdbId || data.id), title: data.title, poster: data.poster, year: data.year });
   };
 
   const handleWatchTrailer = async () => {
@@ -411,7 +422,9 @@ const MovieDetailPage = () => {
             <p className="text-lg leading-relaxed text-white/85 max-w-3xl mb-8">{data.plot}</p>
             <div className="flex flex-wrap gap-4">
               <LiquidButton variant="primary" icon={<i className="fas fa-play" />} onClick={handleWatchTrailer}>Watch Trailer</LiquidButton>
-              <LiquidButton variant="ghost" icon={<i className="fas fa-plus" />}>Add to List</LiquidButton>
+              <LiquidButton variant="ghost" icon={<i className={`fas ${isWishlisted(String(data.tmdbId || data.id)) ? 'fa-check text-green-400' : 'fa-plus'}`} />} onClick={onToggleWishlist}>
+                {isWishlisted(String(data.tmdbId || data.id)) ? 'In Wishlist' : 'Add to Wishlist'}
+              </LiquidButton>
             </div>
           </div>
         </div>
