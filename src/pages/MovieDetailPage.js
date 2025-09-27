@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { movieService, transformIMDbMovie } from '../services/movieService';
 import { buildTmdbImageUrl } from '../services/tmdbService';
 import { getImdbMeta } from '../services/imdbService';
@@ -394,17 +394,27 @@ const MovieDetailPage = () => {
           <div className="mt-16">
             <h2 className="text-2xl font-semibold mb-6">Top Cast</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-              {cast.map(person => (
-                <div key={person.cast_id || person.credit_id || person.id} className="glass-lite rounded-xl p-4 flex flex-col items-center text-center">
-                  {person.profile_path ? (
-                    <img src={buildTmdbImageUrl(person.profile_path, 'w185')} alt={person.name} className="w-24 h-24 object-cover rounded-full mb-3 ring-2 ring-white/10" />
-                  ) : (
-                    <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center text-xs mb-3">No Img</div>
-                  )}
-                  <p className="text-sm font-medium text-white truncate w-full" title={person.name}>{person.name}</p>
-                  {person.character && <p className="text-xs text-white/60 truncate w-full" title={person.character}>{person.character}</p>}
-                </div>
-              ))}
+              {cast.map(person => {
+                const card = (
+                  <div className="glass-lite rounded-xl p-4 flex flex-col items-center text-center hover:scale-[1.02] transition">
+                    {person.profile_path ? (
+                      <img src={buildTmdbImageUrl(person.profile_path, 'w185')} alt={person.name} className="w-24 h-24 object-cover rounded-full mb-3 ring-2 ring-white/10" />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center text-xs mb-3">No Img</div>
+                    )}
+                    <p className="text-sm font-medium text-white truncate w-full" title={person.name}>{person.name}</p>
+                    {person.character && <p className="text-xs text-white/60 truncate w-full" title={person.character}>{person.character}</p>}
+                  </div>
+                );
+                const key = person.cast_id || person.credit_id || person.id;
+                return person.id ? (
+                  <Link key={key} to={`/person/${person.id}`} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400/60 rounded-xl">
+                    {card}
+                  </Link>
+                ) : (
+                  <div key={key}>{card}</div>
+                );
+              })}
             </div>
           </div>
         )}
