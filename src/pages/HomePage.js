@@ -1,4 +1,5 @@
 import React, { useMemo, useEffect } from 'react';
+import { SignedOut, SignInButton } from '@clerk/clerk-react';
 import Hero from '../components/Hero';
 import WeeklyPicks from '../components/WeeklyPicks';
 import PopularCelebsSection from '../components/PopularCelebsSection';
@@ -88,6 +89,14 @@ const HomePage = ({ onMovieClick, getUserRating }) => {
   return (
     <div className="min-h-screen">
       <Hero />
+      {/* Quick access Sign In for signed-out users */}
+      <div className="container mx-auto px-4 pt-4">
+        <SignedOut>
+          <SignInButton>
+            <button className="px-4 py-2 rounded-md bg-white/10 hover:bg-white/20 text-white text-sm ring-1 ring-white/10">Sign In</button>
+          </SignInButton>
+        </SignedOut>
+      </div>
       <div className="container mx-auto px-4 py-10">
         {/* First Fold */}
         {popularRightNow.length > 0 && (

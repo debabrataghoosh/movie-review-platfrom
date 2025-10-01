@@ -8,7 +8,7 @@ import MoviesPage from './pages/MoviesPage';
 import TopRatedPage from './pages/TopRatedPage';
 import TvSeriesPage from './pages/TvSeriesPage';
 import NewReleasesPage from './pages/NewReleasesPage';
-// ReviewsPage removed per navigation change
+import ReviewsPage from './pages/ReviewsPage';
 import PeoplePage from './pages/PeoplePage';
 import PersonDetailPage from './pages/PersonDetailPage';
 import MovieDetailPage from './pages/MovieDetailPage';
@@ -16,7 +16,6 @@ import WishlistPage from './pages/WishlistPage';
 import { MovieProvider } from './context/MovieContext';
 import { AuthProvider } from './context/AuthContext';
 import { WishlistProvider } from './context/WishlistContext';
-import LoginModal from './components/LoginModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useTheme, useUserRatings, useUserReviews } from './hooks/useLocalStorage';
 import './App.css';
@@ -69,6 +68,7 @@ function AppContent() {
             <Route path="/person/:id" element={<PersonDetailPage />} />
             <Route path="/title/:id" element={<MovieDetailPage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
+            <Route path="/reviews" element={<ReviewsPage />} />
           </Routes>
         </main>
 
@@ -96,7 +96,6 @@ function App() {
         <MovieProvider>
           <ErrorBoundary>
             <AppContent />
-            <LoginModal />
           </ErrorBoundary>
         </MovieProvider>
       </WishlistProvider>

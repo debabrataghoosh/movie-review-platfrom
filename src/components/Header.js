@@ -4,6 +4,7 @@ import { useMovieContext } from '../context/MovieContext';
 import FilterPopover from './FilterPopover';
 import { movieService } from '../services/movieService';
 import { useAuth } from '../context/AuthContext';
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
 
 const Header = () => {
   const location = useLocation();
@@ -14,7 +15,7 @@ const Header = () => {
   const { state, actions } = useMovieContext();
   const { genres, filters, searchQuery } = state;
   const [searchInput, setSearchInput] = useState(searchQuery || '');
-  const { user, isAuthenticated, openLogin, signOut } = useAuth();
+  const { user } = useAuth();
 
   // Autocomplete state
   const [suggestions, setSuggestions] = useState([]);
@@ -282,21 +283,37 @@ const Header = () => {
             >
               People
             </Link>
-            <Link
-              to="/wishlist"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/wishlist') ? 'text-red-400 bg-white/5 ring-1 ring-white/10' : 'text-gray-200 hover:text-white/90 hover:bg-white/5 hover:ring-1 hover:ring-white/10'}`}
-            >
-              <i className="fas fa-heart mr-1 text-red-400" /> Wishlist
-            </Link>
-            {/* Account */}
-            {isAuthenticated ? (
+            {/* Account via Clerk */}
+            <SignedIn>
               <div className="flex items-center gap-3">
-                <span className="text-sm text-white/80">Hi, {user.name}</span>
-                <button onClick={signOut} className="px-3 py-1.5 rounded-md text-xs bg-white/5 hover:bg-white/10 text-white/80">Sign out</button>
+                <span className="text-sm text-white/80">Hi, {user?.name}</span>
+                <UserButton
+                  afterSignOutUrl="/"
+                  appearance={{ elements: { userButtonAvatarBox: 'ring-1 ring-white/20' } }}
+                >
+                  <UserButton.MenuItems>
+                    <UserButton.Link
+                      label="Wishlist"
+                      href="/wishlist"
+                      labelIcon={<i className="fas fa-heart text-red-400" aria-hidden="true" />}
+                    />
+                    <UserButton.Link
+                      label="Reviews"
+                      href="/reviews"
+                      labelIcon={<i className="fas fa-star text-yellow-400" aria-hidden="true" />}
+                    />
+                    {/* Keep default Clerk items in desired order */}
+                    <UserButton.Action label="manageAccount" />
+                    <UserButton.Action label="signOut" />
+                  </UserButton.MenuItems>
+                </UserButton>
               </div>
-            ) : (
-              <button onClick={openLogin} className="px-3 py-1.5 rounded-md text-xs bg-white/5 hover:bg-white/10 text-white/80">Sign in</button>
-            )}
+            </SignedIn>
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="px-3 py-1.5 rounded-md text-xs bg-white/5 hover:bg-white/10 text-white/80">Sign in</button>
+              </SignInButton>
+            </SignedOut>
           </div>
 
           {/* Mobile search toggle */}
@@ -401,14 +418,29 @@ const Header = () => {
               </select>
             </div>
             <div className="flex items-center gap-2">
-              <Link to="/wishlist" className={`flex-1 text-center px-3 py-2 rounded-lg ${isActive('/wishlist') ? 'bg-white/10 ring-1 ring-white/10' : 'bg-white/5'} text-white text-sm`}>
-                <i className="fas fa-heart text-red-400 mr-1"/> Wishlist
-              </Link>
-              {isAuthenticated ? (
-                <button type="button" onClick={signOut} className="px-3 py-2 rounded-lg bg-white/5 text-white text-sm">Sign out</button>
-              ) : (
-                <button type="button" onClick={openLogin} className="px-3 py-2 rounded-lg bg-white/5 text-white text-sm">Sign in</button>
-              )}
+              <SignedIn>
+                <UserButton afterSignOutUrl="/">
+                  <UserButton.MenuItems>
+                    <UserButton.Link
+                      label="Wishlist"
+                      href="/wishlist"
+                      labelIcon={<i className="fas fa-heart text-red-400" aria-hidden="true" />}
+                    />
+                    <UserButton.Link
+                      label="Reviews"
+                      href="/reviews"
+                      labelIcon={<i className="fas fa-star text-yellow-400" aria-hidden="true" />}
+                    />
+                    <UserButton.Action label="manageAccount" />
+                    <UserButton.Action label="signOut" />
+                  </UserButton.MenuItems>
+                </UserButton>
+              </SignedIn>
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button type="button" className="px-3 py-2 rounded-lg bg-white/5 text-white text-sm">Sign in</button>
+                </SignInButton>
+              </SignedOut>
             </div>
           </form>
         </div>

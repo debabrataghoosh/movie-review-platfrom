@@ -8,6 +8,7 @@ import TrailerModal from '../components/TrailerModal';
 import { computeReleaseMeta } from '../utils/releaseMeta';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
+import { SignedIn, SignedOut, SignInButton } from '@clerk/clerk-react';
 
 // Lightweight inline credits section component (could be extracted later)
 const CreditsSection = ({ rawId, rawData, fullCredits }) => {
@@ -259,7 +260,7 @@ const ReviewsSection = ({ reviews, imdbMeta }) => {
 const MovieDetailPage = () => {
   const { id } = useParams();
   const { isWishlisted, toggle } = useWishlist();
-  const { isAuthenticated, openLogin } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -270,6 +271,8 @@ const MovieDetailPage = () => {
   const [imdbMeta, setImdbMeta] = useState({ imdbRating: null, imdbVotes: null, metascore: null, rottenTomatoes: null });
   const [trailerKey, setTrailerKey] = useState(null);
   const [trailerTitle, setTrailerTitle] = useState('Trailer');
+  const [runtimeMinutes, setRuntimeMinutes] = useState(null);
+  const [totalReviews, setTotalReviews] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -280,6 +283,11 @@ const MovieDetailPage = () => {
   const transformed = transformIMDbMovie(raw);
         if (!cancelled) {
           setData(transformed);
+          // Runtime (movie runtime or TV episode_run_time average)
+          const rt = typeof raw?.runtime === 'number' && raw.runtime > 0
+            ? raw.runtime
+            : (Array.isArray(raw?.episode_run_time) && raw.episode_run_time.length ? Math.round(raw.episode_run_time.reduce((a,b)=>a+b,0)/raw.episode_run_time.length) : null);
+          setRuntimeMinutes(rt || null);
           // IMDb meta (if external_ids present)
           if (transformed.imdbId) {
             getImdbMeta(transformed.imdbId).then(m => { if (!cancelled) setImdbMeta(m); });
@@ -295,6 +303,7 @@ const MovieDetailPage = () => {
           // Reviews (TMDB) first page
           const reviewResp = await movieService.getMovieReviews(id, 1);
           const parsedReviews = (reviewResp?.results || []).slice(0, 6);
+          setTotalReviews(typeof reviewResp?.total_results === 'number' ? reviewResp.total_results : parsedReviews.length);
           setReviews(parsedReviews);
           // Recommendations
             const mediaType = raw?.first_air_date ? 'tv' : 'movie';
@@ -318,6 +327,7 @@ const MovieDetailPage = () => {
   const poster = data.poster;
   const backdrop = data.backdrop;
   const { dateLabel, daysLeft, isFuture, iso, badgeColor } = computeReleaseMeta(data.releaseDate, data.year);
+  const isFeatured = (data.popularity || 0) > 100; // simple heuristic
 
   const pickBestTrailer = (videos) => {
     const list = Array.isArray(videos?.results) ? videos.results : [];
@@ -328,7 +338,7 @@ const MovieDetailPage = () => {
 
   const onToggleWishlist = () => {
     if (!data) return;
-    if (!isAuthenticated) { openLogin(); return; }
+    if (!isAuthenticated) { return; }
     // Use the transformed 'data' which has normalized fields and id
     toggle({ id: String(data.tmdbId || data.id), title: data.title, poster: data.poster, year: data.year });
   };
@@ -372,7 +382,10 @@ const MovieDetailPage = () => {
           </div>
           {/* Content */}
           <div className="flex-1">
-            <h1 className="text-3xl md:text-5xl font-extrabold mb-4 drop-shadow-[0_2px_20px_rgba(0,0,0,0.6)]">{data.title}</h1>
+            {isFeatured && (
+              <span className="inline-flex items-center text-[11px] font-semibold uppercase tracking-wide px-2 py-1 rounded-full bg-red-600/20 text-red-300 border border-red-500/30 mb-3">Featured</span>
+            )}
+            <h1 className="text-3xl md:text-5xl font-extrabold mb-3 drop-shadow-[0_2px_20px_rgba(0,0,0,0.6)]">{data.title}</h1>
             <div className="flex flex-wrap gap-4 text-sm text-white/80 mb-6 items-center">
               {dateLabel && (
                 <span className="inline-flex items-center gap-2" title={iso || (dateLabel==='TBD' ? 'Release date not yet announced' : '')}>
@@ -387,11 +400,13 @@ const MovieDetailPage = () => {
                   )}
                 </span>
               )}
-              <span className="inline-flex items-center gap-1"><i className="fas fa-film" />{data.genre}</span>
-              {data.originalLanguage && <span className="uppercase tracking-wide">{data.originalLanguage}</span>}
-              {/* TMDB rating (converted to /10) */}
-              <span className="inline-flex items-center gap-1 text-yellow-400" title="TMDB community rating"><i className="fas fa-star" />{(data.rating*2).toFixed(1)}</span>
-              {data.ratingCount && <span className="text-white/60" title="TMDB vote count">{data.ratingCount.toLocaleString()} votes</span>}
+              {/* Primary meta row inspired by mock: 4.5/5 (328 reviews) • 2025 • 142 min */}
+              <span className="inline-flex items-center gap-1 text-yellow-400" title="Community rating out of 5"><i className="fas fa-star" />{(data.rating).toFixed(1)}/5</span>
+              {typeof totalReviews === 'number' && (
+                <span className="text-white/60">({totalReviews.toLocaleString()} reviews)</span>
+              )}
+              {data.year && <span className="text-white/70">• {data.year}</span>}
+              {runtimeMinutes ? <span className="text-white/70">• {runtimeMinutes} min</span> : null}
               {imdbMeta.imdbRating && (
                 <span className="inline-flex items-center gap-1 bg-black/40 border border-yellow-500/30 rounded-md px-2 py-[2px] text-[13px] shadow" title="IMDb rating">
                   <span className="font-semibold text-yellow-400">IMDb</span>
@@ -422,8 +437,27 @@ const MovieDetailPage = () => {
             <p className="text-lg leading-relaxed text-white/85 max-w-3xl mb-8">{data.plot}</p>
             <div className="flex flex-wrap gap-4">
               <LiquidButton variant="primary" icon={<i className="fas fa-play" />} onClick={handleWatchTrailer}>Watch Trailer</LiquidButton>
-              <LiquidButton variant="ghost" icon={<i className={`fas ${isWishlisted(String(data.tmdbId || data.id)) ? 'fa-check text-green-400' : 'fa-plus'}`} />} onClick={onToggleWishlist}>
-                {isWishlisted(String(data.tmdbId || data.id)) ? 'In Wishlist' : 'Add to Wishlist'}
+              <SignedIn>
+                <LiquidButton variant="ghost" icon={<i className={`fas ${isWishlisted(String(data.tmdbId || data.id)) ? 'fa-check text-green-400' : 'fa-plus'}`} />} onClick={onToggleWishlist}>
+                  {isWishlisted(String(data.tmdbId || data.id)) ? 'In Watchlist' : 'Add to Watchlist'}
+                </LiquidButton>
+              </SignedIn>
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-white/5 hover:bg-white/10 text-white text-sm ring-1 ring-white/10">
+                    <i className="fas fa-plus" /> Sign in to Watchlist
+                  </button>
+                </SignInButton>
+              </SignedOut>
+              <LiquidButton
+                variant="ghost"
+                icon={<i className="fas fa-pen" />}
+                onClick={() => {
+                  const el = document.getElementById('reviews');
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+              >
+                Write a Review
               </LiquidButton>
             </div>
           </div>
