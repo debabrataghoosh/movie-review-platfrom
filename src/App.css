@@ -386,3 +386,192 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Clerk UserButton popover — liquid glass overrides */
+.cl-userButtonPopoverCard {
+  background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 4px 18px -4px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.05);
+  color: #f5f5f5;
+}
+.cl-userButtonPopoverHeader,
+.cl-userButtonPopoverFooter {
+  background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+}
+.cl-userButtonPopoverActionButton {
+  background: linear-gradient(140deg, rgba(255,255,255,0.30), rgba(255,255,255,0.12));
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow: 0 4px 18px -4px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.25);
+  color: #ffffff;
+}
+.cl-userButtonPopoverActionButton:hover {
+  background: linear-gradient(140deg, rgba(255,255,255,0.40), rgba(255,255,255,0.18));
+  box-shadow: 0 6px 22px -4px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.35);
+}
+.cl-userButtonPopoverActionButton__danger {
+  border-color: rgba(255,140,150,0.4);
+}
+
+/* Unify Clerk action rows (default + danger) */
+.cl-userButtonPopoverActionButton,
+.cl-userButtonPopoverActionButton__danger {
+  background-image:
+    linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 8px, rgba(0,0,0,0) 8px, rgba(0,0,0,0) 16px) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(150%) !important;
+  backdrop-filter: blur(18px) saturate(150%) !important;
+  color: #ffffff !important;
+}
+.cl-userButtonPopoverActionButton:hover,
+.cl-userButtonPopoverActionButton__danger:hover {
+  background-image:
+    linear-gradient(145deg, rgba(255,255,255,0.10), rgba(255,255,255,0.06)),
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 8px, rgba(0,0,0,0) 8px, rgba(0,0,0,0) 16px) !important;
+}
+
+.cl-userPreviewMainIdentifier { color: #ffffff; }
+.cl-userPreviewSecondaryIdentifier { color: rgba(255,255,255,0.7); }
+
+/* Clerk UserButton popover — additional containers to ensure full glass */
+.cl-userPreview {
+  background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+}
+.cl-userButtonPopoverActions {
+  background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
+}
+/* Fallback for any inner container that still paints black */
+.cl-userButtonPopoverCard > * {
+  background-color: transparent !important;
+}
+/* Subtle dividers consistent with glass theme */
+.cl-divider, .cl-dividerLine {
+  background: rgba(255,255,255,0.06) !important;
+  height: 1px;
+}
+
+/* Striped glass background – matches Clerk footer vibe */
+.glass-striped {
+  position: relative;
+  background-image:
+    linear-gradient(140deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03)),
+    repeating-linear-gradient(135deg,
+      rgba(255,255,255,0.06) 0px,
+      rgba(255,255,255,0.06) 8px,
+      rgba(0,0,0,0) 8px,
+      rgba(0,0,0,0) 16px
+    );
+  background-blend-mode: overlay;
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  backdrop-filter: blur(22px) saturate(160%);
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 8px 28px -6px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+.glass-striped-dark {
+  background-image:
+    linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
+    repeating-linear-gradient(135deg,
+      rgba(255,255,255,0.05) 0px,
+      rgba(255,255,255,0.05) 8px,
+      rgba(0,0,0,0) 8px,
+      rgba(0,0,0,0) 16px
+    );
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 4px 18px -4px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+/* Clerk UserButton popover — ensure all actions are readable */
+.cl-userButtonPopoverCard a,
+.cl-userButtonPopoverCard button,
+.cl-userButtonPopoverActionButtonText {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+.cl-userButtonPopoverCard a:hover,
+.cl-userButtonPopoverCard button:hover {
+  background: linear-gradient(140deg, rgba(255,255,255,0.40), rgba(255,255,255,0.18));
+}
+
+/* Reset Clerk UserButton dropdown to original white */
+/* These overrides neutralize earlier glass/striped styles */
+.cl-userButtonPopoverCard,
+.cl-userButtonPopoverHeader,
+.cl-userButtonPopoverFooter,
+.cl-userButtonPopoverActions,
+.cl-userPreview {
+  background: #ffffff !important;
+  background-image: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  color: #111827 !important; /* gray-900 */
+}
+/* Ensure inner containers don’t re-apply transparency */
+.cl-userButtonPopoverCard > * { background-color: #ffffff !important; }
+/* Action rows (default + danger) */
+.cl-userButtonPopoverActionButton,
+.cl-userButtonPopoverActionButton__danger {
+  background: #ffffff !important;
+  background-image: none !important;
+  color: #111827 !important; /* text */
+}
+.cl-userButtonPopoverActionButton:hover,
+.cl-userButtonPopoverActionButton__danger:hover { background-color: #f3f4f6 !important; } /* gray-100 */
+/* Icons and identifiers */
+.cl-userButtonPopoverActionButtonIcon { color: #6b7280 !important; } /* gray-500 */
+.cl-userPreviewMainIdentifier { color: #111827 !important; }
+.cl-userPreviewSecondaryIdentifier { color: #6b7280 !important; }
+/* Dividers */
+.cl-divider, .cl-dividerLine { background: rgba(17,24,39,0.08) !important; }
+
+/* iOS-style liquid glass tokens */
+:root {
+  --lg-bg-a: rgba(255,255,255,0.10);
+  --lg-bg-b: rgba(255,255,255,0.03);
+  --lg-stripe: rgba(255,255,255,0.06);
+  --lg-border: rgba(255,255,255,0.22);
+  --lg-inner: rgba(255,255,255,0.08);
+  --lg-shadow: 0 12px 40px -16px rgba(0,0,0,0.65);
+}
+
+/* iOS liquid glass surfaces */
+.glass-ios-card {
+  position: relative;
+  background-image:
+    linear-gradient(145deg, var(--lg-bg-a), var(--lg-bg-b)),
+    radial-gradient(120% 120% at 20% 15%, rgba(255,255,255,0.22), rgba(255,255,255,0) 40%),
+    radial-gradient(120% 120% at 80% 85%, rgba(255,255,255,0.12), rgba(255,255,255,0) 45%),
+    repeating-linear-gradient(135deg, var(--lg-stripe) 0px, var(--lg-stripe) 8px, rgba(0,0,0,0) 8px, rgba(0,0,0,0) 16px);
+  background-blend-mode: overlay;
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  backdrop-filter: blur(26px) saturate(180%);
+  border-radius: 22px;
+  border: 1px solid var(--lg-border);
+  box-shadow: var(--lg-shadow), inset 0 0 0 1px var(--lg-inner);
+}
+.glass-ios-section {
+  background-image:
+    linear-gradient(145deg, var(--lg-bg-a), var(--lg-bg-b)),
+    repeating-linear-gradient(135deg, var(--lg-stripe) 0px, var(--lg-stripe) 8px, rgba(0,0,0,0) 8px, rgba(0,0,0,0) 16px);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  backdrop-filter: blur(22px) saturate(160%);
+}
+.glass-ios-row {
+  background-image:
+    linear-gradient(140deg, rgba(255,255,255,0.24), rgba(255,255,255,0.12));
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255,255,255,0.25);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.18);
+}
+.glass-ios-row:hover { background-image: linear-gradient(140deg, rgba(255,255,255,0.32), rgba(255,255,255,0.18)); }
+.glass-ios-text { color: #fff; }
+.glass-ios-muted { color: rgba(255,255,255,0.7); }

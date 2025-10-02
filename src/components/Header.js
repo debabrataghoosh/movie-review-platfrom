@@ -165,13 +165,19 @@ const Header = () => {
       <div className="pointer-events-none absolute inset-x-0 -bottom-px h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center h-20 gap-4">
-          {/* Brand (text only, no logo) */}
+          {/* Brand (text + logo) */}
           <Link
             to="/"
             aria-label="CineRank Home"
-            className="text-white font-extrabold text-xl md:text-2xl tracking-tight select-none hover:text-white/90"
+            className="flex items-center gap-2 text-white font-extrabold text-xl md:text-2xl tracking-tight select-none hover:text-white/90"
           >
-            CineRank
+            <img
+              src="/favicon.png"
+              alt="CineRank logo"
+              className="h-7 w-7 rounded-lg shadow-sm ring-1 ring-white/10"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
+            <span>CineRank</span>
           </Link>
 
           {/* Search + Filters (desktop) */}
