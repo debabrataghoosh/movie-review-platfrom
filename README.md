@@ -1,3 +1,4 @@
+
 # CineRank – Modern Movies & People Discovery Platform
 
 A modern React + Tailwind application for discovering movies, TV series, and popular celebrities (people) using real data from The Movie Database (TMDB). The platform now emphasizes rich browsing, people exploration, progressive content reveal sections, a refined glassmorphic UI, and first‑class authentication with Clerk.
@@ -19,12 +20,14 @@ Production Deployment: <https://cinerank-tau.vercel.app>
 - **Modern Grid UI**: Responsive, accessible layouts with consistent spacing & large expressive headings
 - **Local Ratings (Extensible)**: Context + localStorage patterns ready for persistent personalization
 - **Authentication with Clerk**: Drop-in auth UI, session management, and a personalized user dropdown
-   - User dropdown now includes: Wishlist and Reviews
+   - User dropdown now includes: Wishlist and Reviews (via Clerk)
    - Header cleaned up: Wishlist button removed; access via user menu
+   - Clerk authentication UI and dropdown now match the site's dark theme
 - **Context-driven State**: Central `MovieContext` aggregates movies, TV, people & details
 - **Performance Friendly**: Conditional rendering, chunked lists, progressive reveal
 
 > Header no longer shows a standalone Wishlist link; use the user dropdown (Clerk) for Wishlist and Reviews.
+> Clerk SignIn/SignUp and dropdown are themed to match the site's dark mode for a seamless experience.
 
 ## 🛠️ Tech Stack
 
@@ -36,11 +39,13 @@ Production Deployment: <https://cinerank-tau.vercel.app>
 - **Context API** - Global state management
 - **Custom Hooks** - Reusable logic with localStorage integration
 
+
 ### API & Services
 
 - **TMDB API** - The Movie Database API for real movie data
 - **Axios** - HTTP client for API requests
 - **Service Layer** - Organized API service architecture
+
 
 ### Development Tools
 
@@ -49,6 +54,7 @@ Production Deployment: <https://cinerank-tau.vercel.app>
 - **Font Awesome** - Icon library
 
 ## 📦 Installation & Setup
+
 
 ### Prerequisites
 
@@ -85,9 +91,7 @@ Production Deployment: <https://cinerank-tau.vercel.app>
    REACT_APP_TMDB_API_KEY=your_tmdb_api_key
 
    # Clerk (client)
-   REACT_APP_CLERK_PUBLISHABLE_KEY=pk_test_...  # required for local/dev
-   # Optional: Vite compatibility if you ever run the Vite demo in /clerk-react
-   VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+   REACT_APP_CLERK_PUBLISHABLE_KEY=pk_test_...  # required for local/dev and Vercel
 
    # Clerk (server-side only; do NOT expose to client bundles)
    CLERK_SECRET_KEY=sk_test_...
@@ -109,12 +113,13 @@ Production Deployment: <https://cinerank-tau.vercel.app>
 npm run build
 ```
 
+
 ## 🏗️ Project Structure (Key Paths)
 
 ```
 src/
 ├── components/          # Reusable React components
-│   ├── Header.js             # Navigation header (auth via Clerk; Wishlist removed from nav)
+│   ├── Header.js             # Navigation header (auth via Clerk; Wishlist & Reviews in dropdown)
 │   ├── Hero.js               # Hero section (primary call to explore)
 │   ├── WeeklyPicks.js        # Progressive multi-row movie showcase
 │   ├── PopularCelebsSection.js # Progressive reveal celeb avatars
@@ -146,13 +151,14 @@ src/
 ├── hooks/              # Custom React hooks
 │   └── useLocalStorage.js # localStorage management
 ├── data/                   # Static/fallback data
-│   └── moviesData.js       # Fallback movie sample data
+│   └── moviesData.js       # Fallback movie sample data (legacy, may be removed)
 ├── utils/                  # Utility helpers
 │   └── releaseMeta.js      # Release date -> badge/meta helpers
 ├── App.js              # Main app with routing
 ├── App.css             # Tailwind CSS and custom styles
 └── index.js            # React entry point
 ```
+
 
 ## 🎯 Key Concepts & Components
 
@@ -169,10 +175,11 @@ src/
 - **Local Storage Hook**: Ready for persisting ratings/user preferences
 - **Composable Filters**: Dynamic genre & language lists populated from API
 
+
 ### Routing & Navigation
 
-- **Routes**: `/`, `/movies`, `/tv`, `/new`, `/top-rated`, `/people`, `/person/:id`, `/title/:id`
-- **User Menu (Clerk)**: `/wishlist`, `/reviews` are available from the avatar dropdown
+- **Routes**: `/`, `/movies`, `/tv`, `/new`, `/top-rated`, `/people`, `/person/:id`, `/title/:id`, `/wishlist`, `/reviews`
+- **User Menu (Clerk)**: `/wishlist`, `/reviews` are available from the avatar dropdown (Clerk)
 - **Deep Linking**: Stable detail page URLs using TMDB IDs
 
 ### User-Facing Features
@@ -183,11 +190,18 @@ src/
 - **Glass UI Buttons**: `LiquidButton` variants (primary / ghost) unify CTAs
 - **Movie & Person Detail**: Rich meta sections (biography, departments, known for)
 
+
 ## 🎨 Styling & Design
+
 
 ### Tailwind CSS Integration
 
+### Clerk Dark Theme
+
+- Clerk SignIn/SignUp and dropdown are themed to match the site's dark mode using appearance variables and custom CSS for a seamless look.
+
 ### Responsive Breakpoints
+
 
 ## 🔧 Configuration
 
@@ -208,7 +222,7 @@ CLERK_SECRET_KEY=sk_test_...
 
 Notes:
 
-- The app entry reads the publishable key from `REACT_APP_CLERK_PUBLISHABLE_KEY`, and falls back to `VITE_CLERK_PUBLISHABLE_KEY` (for the demo under `clerk-react/`).
+- The app entry reads the publishable key from `REACT_APP_CLERK_PUBLISHABLE_KEY`.
 - Never commit real secrets. Prefer `.env.local` for personal values and keep templates in `.env.local.example`.
 
 ### Tailwind Configuration
@@ -245,14 +259,31 @@ The project includes custom Tailwind configuration with:
 - Minimal external dependencies (hand-rolled `cx` helper)
 - Conditional feature rendering to reduce initial payload
 
-## 🔮 Future Enhancements
 
+## 🔮 Future Scope & Improvements
+
+- **Wishlist & Reviews Expansion**: Add ability to create, edit, and share wishlists and reviews with other users. Enable rating and commenting on reviews.
+- **Social Features**: Follow users, see friends' activity, and share recommendations.
+- **Notifications**: Add in-app and email notifications for new releases, reviews, and wishlist updates.
+- **Admin Dashboard**: Manage content, users, and moderate reviews.
+- **Mobile App**: Build a React Native version for iOS/Android.
+- **Performance**: Add server-side rendering (SSR) or static site generation (SSG) for SEO and speed.
+- **Accessibility**: Further improve keyboard navigation and screen reader support.
+- **Internationalization**: Add multi-language support for global users.
+- **Testing**: Add more unit and integration tests for critical flows.
 
 ## 🧭 Changelog (Recent)
 
 ### 2025-10 (Clerk Auth & Menu Cleanup)
+- Migrated authentication to Clerk
+- Removed legacy login modal and unused code
+- Added Wishlist and Reviews to Clerk dropdown
+- Themed Clerk UI and dropdown to match site dark mode
 
 ### 2025-09 (People & UI Expansion)
+- Added Popular Celebs section
+- Improved progressive reveal and grid layouts
+- Refined glassmorphic UI and button system
 
 ### Earlier (Foundational)
 
@@ -269,12 +300,15 @@ The project includes custom Tailwind configuration with:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+
 ## 🙏 Acknowledgments
+
 
 
 ## 📞 Support
 
 If you have any questions or need help setting up the project, please create an issue in the repository or contact the development team.
+
 
 
 Built with ❤️ using modern web technologies.
